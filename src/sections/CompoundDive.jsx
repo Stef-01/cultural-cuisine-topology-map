@@ -85,12 +85,15 @@ export default function CompoundDive() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Search and Results */}
         <div className="col-span-1 bg-slate-900/50 border border-slate-700/50 rounded-lg p-6 h-fit max-h-[500px] overflow-y-auto">
+          <label htmlFor="compound-search" className="sr-only">Search flavor compounds</label>
           <input
+            id="compound-search"
             type="text"
             placeholder="Search compounds..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded mb-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#d4a574]"
+            aria-label="Search flavor compounds by name"
           />
           <div className="text-xs text-slate-500 mb-2">
             {filteredCompounds.length} compounds{searchQuery && ` matching "${searchQuery}"`}

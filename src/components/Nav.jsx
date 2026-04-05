@@ -32,8 +32,8 @@ const Nav = () => {
     }
   };
 
-  // Calculate active section based on scroll progress
-  const activeSection = Math.floor(scrollProgress * SECTIONS.length);
+  // Calculate active section based on scroll progress (clamped to valid range)
+  const activeSection = Math.min(Math.floor(scrollProgress * SECTIONS.length), SECTIONS.length - 1);
 
   return (
     <>

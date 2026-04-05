@@ -286,12 +286,15 @@ const ForceNetwork = () => {
   return (
     <div ref={containerRef} className="w-full">
       <div className="mb-4 flex gap-2">
+        <label htmlFor="network-search" className="sr-only">Search cuisines</label>
         <input
+          id="network-search"
           type="text"
           placeholder="Search cuisines..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="px-3 py-2 rounded bg-slate-900 text-slate-200 placeholder-slate-500 border border-slate-700"
+          className="px-3 py-2 rounded bg-slate-900 text-slate-200 placeholder-slate-500 border border-slate-700 focus:ring-2 focus:ring-[#d4a574] focus:outline-none"
+          aria-label="Search cuisines in the force network"
         />
       </div>
 

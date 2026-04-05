@@ -5,10 +5,6 @@ const useStore = create((set) => ({
   activeSection: 0,
   setActiveSection: (idx) => set({ activeSection: idx }),
 
-  // Topology explorer
-  activeTab: 'network', // 'network' | 'public' | 'technical'
-  setActiveTab: (tab) => set({ activeTab: tab }),
-
   // Selected cuisine (used across sections)
   selectedCuisine: null,
   setSelectedCuisine: (id) => set({ selectedCuisine: id }),
@@ -20,7 +16,7 @@ const useStore = create((set) => ({
   // Clinical tool filters
   clinicalCuisine: 'indian',
   setClinicalCuisine: (id) => set({ clinicalCuisine: id }),
-  clinicalCategory: '',
+  clinicalCategory: 'all',
   setClinicalCategory: (cat) => set({ clinicalCategory: cat }),
 
   // Compound explorer

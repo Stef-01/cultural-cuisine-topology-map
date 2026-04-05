@@ -154,9 +154,14 @@ section {
   opacity: 0.15;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .technical-grid {
-    grid-template-columns: 1fr !important;
+/* Print styles */
+@media print {
+  nav, .absolute, canvas, .animate-bounce, footer button {
+    display: none !important;
+  }
+  section {
+    page-break-inside: avoid;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
