@@ -14,7 +14,10 @@ import {
   computeDendrogram,
   computeCompoundCuisineMatrix,
   computeGISensitivity,
+  isGIZeroProtein,
+  filterGIZeroProtein,
   cuisineSummaries,
+  data,
 } from './computed'
 
 describe('Core data integrity', () => {
@@ -307,5 +310,53 @@ describe('Universal compounds', () => {
     for (let i = 1; i < result.length; i++) {
       expect(result[i - 1].count).toBeGreaterThanOrEqual(result[i].count)
     }
+  })
+})
+
+describe('GI=0 protein filter', () => {
+  it('identifies GI=0 protein meals', () => {
+    expect(isGIZeroProtein({ gi: 0, category: 'protein' })).toBe(true)
+    expect(isGIZeroProtein({ gi: 0, category: 'legume' })).toBe(false)
+    expect(isGIZeroProtein({ gi: 25, category: 'protein' })).toBe(false)
+  })
+
+  it('filters GI=0 protein meals from array', () => {
+    const meals = [
+      { gi: 0, category: 'protein', name: 'Chicken' },
+      { gi: 25, category: 'legume', name: 'Dal' },
+      { gi: 0, category: 'soup', name: 'Broth' },
+    ]
+    const filtered = filterGIZeroProtein(meals)
+    expect(filtered).toHaveLength(2)
+    expect(filtered[0].name).toBe('Dal')
+    expect(filtered[1].name).toBe('Broth')
+  })
+
+  it('GI=0 proteins exist in the real dataset', () => {
+    let gi0ProteinCount = 0
+    cuisineIds.forEach(cid => {
+      const meals = data.cuisines[cid].meals || []
+      meals.forEach(m => {
+        if (isGIZeroProtein(m)) gi0ProteinCount++
+      })
+    })
+    // The validation script found 270 GI=0 proteins
+    expect(gi0ProteinCount).toBeGreaterThan(200)
+  })
+})
+
+describe('Overlap details', () => {
+  it('returns overlap data for known pairs', () => {
+    const overlap = getOverlap('indian', 'thai')
+    expect(overlap).toBeDefined()
+    if (overlap) {
+      expect(overlap).toHaveProperty('shared_count')
+      expect(overlap.shared_count).toBeGreaterThan(0)
+    }
+  })
+
+  it('returns null for non-existent pair', () => {
+    const overlap = getOverlap('fake1', 'fake2')
+    expect(overlap).toBeNull()
   })
 })

@@ -69,8 +69,8 @@ const Nav = () => {
             </h1>
           </div>
 
-          {/* Center: Section Dots */}
-          <div className="flex-1 flex justify-center gap-3 px-4">
+          {/* Center: Section Dots (hidden on small mobile) */}
+          <div className="flex-1 hidden sm:flex justify-center gap-3 px-4">
             {SECTIONS.map((section, index) => (
               <button
                 key={section.id}
@@ -93,7 +93,7 @@ const Nav = () => {
           </div>
 
           {/* Right: Buttons */}
-          <div className="flex-1 flex justify-end gap-3">
+          <div className="flex-1 flex justify-end gap-2 sm:gap-3">
             <button
               onClick={() => handleScroll('topology')}
               className="px-3 py-1.5 rounded text-xs font-medium transition-all duration-300"

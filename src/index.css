@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth scrolling with nav offset */
+html {
+  scroll-padding-top: 80px;
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid #d4a574;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Section padding */
+section {
+  padding: 4rem 1.5rem;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  section {
+    padding: 5rem 2rem;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
