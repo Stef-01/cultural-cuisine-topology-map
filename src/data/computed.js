@@ -549,6 +549,222 @@ export function getGIDistribution(cuisineId) {
   }))
 }
 
+// ─── HIERARCHICAL CLUSTERING (UPGMA) ─────────────────────────
+// Produces a dendrogram from the Jaccard distance matrix using
+// UPGMA (Unweighted Pair Group Method with Arithmetic Mean).
+// This is the standard method for cuisine similarity and is more
+// interpretable than TDA persistence at n=10.
+export function computeDendrogram() {
+  const n = cuisineIds.length
+
+  // Build full distance matrix
+  const dist = Array.from({ length: n }, () => new Float64Array(n))
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const d = 1 - getJaccard(cuisineIds[i], cuisineIds[j])
+      dist[i][j] = d
+      dist[j][i] = d
+    }
+  }
+
+  // UPGMA algorithm
+  const clusterSizes = new Array(n).fill(1)
+  const active = new Set(Array.from({ length: n }, (_, i) => i))
+  const merges = [] // { left, right, distance, newId, leftLabel, rightLabel }
+
+  // Labels: initially cuisine names, then cluster IDs
+  const labels = cuisineIds.map(id => CUISINE_NAMES[id] || id)
+  let nextClusterId = n
+
+  for (let step = 0; step < n - 1; step++) {
+    // Find minimum distance pair among active clusters
+    let minDist = Infinity, minI = -1, minJ = -1
+    const activeArr = [...active]
+    for (let ai = 0; ai < activeArr.length; ai++) {
+      for (let aj = ai + 1; aj < activeArr.length; aj++) {
+        const i = activeArr[ai], j = activeArr[aj]
+        if (dist[i][j] < minDist) {
+          minDist = dist[i][j]
+          minI = i
+          minJ = j
+        }
+      }
+    }
+
+    // Merge minI and minJ into a new cluster
+    merges.push({
+      left: minI,
+      right: minJ,
+      distance: minDist,
+      newId: nextClusterId,
+      leftLabel: labels[minI],
+      rightLabel: labels[minJ],
+    })
+
+    // Update distance matrix: UPGMA average
+    // Extend the matrix for the new cluster
+    const newRow = new Float64Array(nextClusterId + 1)
+    for (const k of active) {
+      if (k === minI || k === minJ) continue
+      const newDist = (dist[minI][k] * clusterSizes[minI] + dist[minJ][k] * clusterSizes[minJ]) /
+        (clusterSizes[minI] + clusterSizes[minJ])
+      newRow[k] = newDist
+      // Also set reverse (expanding dist as needed)
+      if (dist[k]) {
+        const expanded = new Float64Array(nextClusterId + 1)
+        expanded.set(dist[k])
+        expanded[nextClusterId] = newDist
+        dist[k] = expanded
+      }
+    }
+    dist[nextClusterId] = newRow
+
+    labels[nextClusterId] = `(${labels[minI]}, ${labels[minJ]})`
+    clusterSizes[nextClusterId] = clusterSizes[minI] + clusterSizes[minJ]
+
+    active.delete(minI)
+    active.delete(minJ)
+    active.add(nextClusterId)
+    nextClusterId++
+  }
+
+  // Convert merges to a tree structure for visualization
+  function buildTree(nodeId) {
+    if (nodeId < n) {
+      return {
+        id: cuisineIds[nodeId],
+        name: CUISINE_NAMES[cuisineIds[nodeId]] || cuisineIds[nodeId],
+        color: CUISINE_COLORS[cuisineIds[nodeId]] || '#ccc',
+        distance: 0,
+        isLeaf: true,
+      }
+    }
+    const merge = merges[nodeId - n]
+    return {
+      id: `cluster_${nodeId}`,
+      distance: merge.distance,
+      isLeaf: false,
+      children: [buildTree(merge.left), buildTree(merge.right)],
+    }
+  }
+
+  const rootId = nextClusterId - 1
+  return {
+    tree: buildTree(rootId),
+    merges: merges.map(m => ({
+      ...m,
+      leftCuisine: m.leftLabel,
+      rightCuisine: m.rightLabel,
+    })),
+    method: 'UPGMA (Unweighted Pair Group Method with Arithmetic Mean)',
+  }
+}
+
+// ─── COMPOUND-LEVEL ANALYSIS (Track B: Academic Depth) ───────
+// Treat each compound as a point in 10-dimensional binary cuisine-space.
+// This provides a richer basis for TDA (n=333 vs n=10).
+export function computeCompoundCuisineMatrix() {
+  // Gather all unique compounds across all cuisines
+  const allCompounds = new Set()
+  cuisineIds.forEach(cid => {
+    const comps = rawData.cuisines[cid].all_compounds || rawData.cuisines[cid].compounds || []
+    comps.forEach(c => allCompounds.add(c))
+  })
+  const compoundList = [...allCompounds].sort()
+
+  // Build binary matrix: compounds × cuisines
+  const matrix = compoundList.map(comp => {
+    const row = {}
+    cuisineIds.forEach(cid => {
+      const comps = rawData.cuisines[cid].all_compounds || rawData.cuisines[cid].compounds || []
+      row[cid] = comps.includes(comp) ? 1 : 0
+    })
+    return { compound: comp, ...row }
+  })
+
+  // Compute Hamming distance between all compound pairs (for TDA)
+  // This is O(n^2) where n=333, producing ~55,000 distances
+  // For efficiency, we compute summary statistics rather than the full matrix
+  const n = compoundList.length
+
+  // Distribution of how many cuisines each compound appears in
+  const cuisineCountDist = compoundList.map(comp => {
+    let count = 0
+    cuisineIds.forEach(cid => {
+      const comps = rawData.cuisines[cid].all_compounds || rawData.cuisines[cid].compounds || []
+      if (comps.includes(comp)) count++
+    })
+    return count
+  })
+
+  // Compound uniqueness score: 1 = appears in 1 cuisine, 0 = appears in all 10
+  const uniquenessScores = cuisineCountDist.map(c => 1 - (c - 1) / (cuisineIds.length - 1))
+
+  // Summary: compound clustering by cuisine presence pattern
+  const patternClusters = new Map()
+  compoundList.forEach((comp, idx) => {
+    const pattern = cuisineIds.map(cid => {
+      const comps = rawData.cuisines[cid].all_compounds || rawData.cuisines[cid].compounds || []
+      return comps.includes(comp) ? '1' : '0'
+    }).join('')
+
+    if (!patternClusters.has(pattern)) {
+      patternClusters.set(pattern, { pattern, compounds: [], cuisineCount: cuisineCountDist[idx] })
+    }
+    patternClusters.get(pattern).compounds.push(comp)
+  })
+
+  const clusters = [...patternClusters.values()]
+    .sort((a, b) => b.compounds.length - a.compounds.length)
+
+  return {
+    totalCompounds: n,
+    matrix,
+    cuisineCountDistribution: {
+      unique: cuisineCountDist.filter(c => c === 1).length,
+      rare: cuisineCountDist.filter(c => c <= 3).length,
+      common: cuisineCountDist.filter(c => c >= 7).length,
+      universal: cuisineCountDist.filter(c => c === 10).length,
+    },
+    uniquenessScores,
+    patternClusters: clusters.slice(0, 30), // top 30 patterns
+    metadata: {
+      dimensions: `${n} compounds x ${cuisineIds.length} cuisines`,
+      method: 'Binary presence/absence matrix with Hamming distance',
+      suitableForTDA: n >= 50,
+      note: 'For full persistent homology, run ripser on the Hamming distance matrix (Python recommended for n=333)',
+    },
+  }
+}
+
+// ─── GI SENSITIVITY ANALYSIS ─────────────────────────────────
+// Compare results when using only measured GI values vs. all values
+export function computeGISensitivity() {
+  return cuisineIds.map(cid => {
+    const meals = rawData.cuisines[cid].meals || []
+
+    const measured = meals.filter(m => m.gi_ref && !m.gi_ref.startsWith('est.'))
+    const estimated = meals.filter(m => m.gi_ref && m.gi_ref.startsWith('est.'))
+
+    const avg = arr => arr.length ? arr.reduce((s, m) => s + m.gi, 0) / arr.length : null
+
+    return {
+      cuisine: cid,
+      name: CUISINE_NAMES[cid],
+      totalMeals: meals.length,
+      measuredCount: measured.length,
+      estimatedCount: estimated.length,
+      measuredPct: Math.round((measured.length / meals.length) * 100),
+      avgGI_all: avg(meals),
+      avgGI_measuredOnly: avg(measured),
+      avgGI_estimatedOnly: avg(estimated),
+      delta: avg(measured) != null && avg(meals) != null
+        ? Math.abs(avg(measured) - avg(meals)).toFixed(1)
+        : 'N/A',
+    }
+  })
+}
+
 // ─── PRECOMPUTED SUMMARIES ───────────────────────────────────
 export const cuisineSummaries = cuisineIds.map(cid => {
   const c = rawData.cuisines[cid]
