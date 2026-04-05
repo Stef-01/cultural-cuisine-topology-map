@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import ScrollSection from '../components/ScrollSection'
 import TabPanel from '../components/TabPanel'
+import InfoOverlay from '../components/InfoOverlay'
 import ForceNetwork from '../viz/ForceNetwork'
 import PersistenceDiagram from '../viz/PersistenceDiagram'
 import BettiChart from '../viz/BettiChart'
@@ -29,7 +30,13 @@ export default function TopologyExplorer() {
       <TabPanel tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
         {/* Network Tab */}
         {activeTab === 'network' && (
-          <div className="w-full h-96">
+          <div className="w-full relative">
+            <InfoOverlay title="How to Read the Force Network">
+              <p>Each <strong>node</strong> is a world cuisine. Node size reflects the number of unique flavor compounds.</p>
+              <p><strong>Links</strong> connect cuisines that share flavor compounds. Thicker links = higher Jaccard similarity (more shared compounds).</p>
+              <p><strong>Hover</strong> a node to see its molecular bridges &mdash; which cuisines share the most compounds and what those compounds are.</p>
+              <p><strong>Drag</strong> nodes to explore the layout. The force simulation pulls similar cuisines closer together.</p>
+            </InfoOverlay>
             <ForceNetwork />
           </div>
         )}
@@ -38,7 +45,13 @@ export default function TopologyExplorer() {
         {activeTab === 'public' && (
           <div className="space-y-6">
             {/* Dendrogram — primary analytical viz for n=10 */}
-            <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg shadow p-6">
+            <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg shadow p-6 relative">
+              <InfoOverlay title="How to Read the Dendrogram">
+                <p>This is a <strong>hierarchical clustering</strong> tree (UPGMA method). Cuisines that merge at shorter distances (left) share more flavor compounds.</p>
+                <p>The <strong>x-axis</strong> shows Jaccard distance (0 = identical compound sets, 1 = no overlap).</p>
+                <p><strong>Hover</strong> merge points to see the exact distance and Jaccard similarity where two cuisine groups joined.</p>
+                <p>This is more interpretable than TDA persistence diagrams at n=10 and conveys the same hierarchical structure.</p>
+              </InfoOverlay>
               <DendrogramChart />
               <p className="text-xs text-slate-500 mt-2 text-center">
                 UPGMA hierarchical clustering on Jaccard distances. Shows which cuisines share the most flavor compounds.

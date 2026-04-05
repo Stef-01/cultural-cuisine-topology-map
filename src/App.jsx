@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react'
 import Nav from './components/Nav'
+import Footer from './components/Footer'
 import ErrorBoundary from './components/ErrorBoundary'
 import Hero from './sections/Hero'
 import Problem from './sections/Problem'
@@ -65,6 +66,8 @@ export default function App() {
           <Methodology />
         </Suspense>
       </ErrorBoundary>
+
+      <Footer />
     </div>
   )
 }

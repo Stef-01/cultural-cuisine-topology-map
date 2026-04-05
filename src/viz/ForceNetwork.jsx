@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
-import { getJaccard, sortedPairs, cuisineIds, data } from '../data/computed'
+import { getJaccard, getOverlap, sortedPairs, cuisineIds, data } from '../data/computed'
 import { CUISINE_COLORS, CUISINE_NAMES } from '../data/constants'
 import useStore from '../store'
 
@@ -9,6 +9,7 @@ const ForceNetwork = () => {
   const containerRef = useRef()
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
   const [searchTerm, setSearchTerm] = useState('')
+  const [bridgeInfo, setBridgeInfo] = useState(null) // { cuisine, connections }
   const { hoveredCuisine, setHoveredCuisine, selectedCuisine, setSelectedCuisine } = useStore()
   const hoveredRef = useRef(null)
   const selectedRef = useRef(null)
@@ -74,16 +75,19 @@ const ForceNetwork = () => {
     feMerge.append('feMergeNode').attr('in', 'coloredBlur')
     feMerge.append('feMergeNode').attr('in', 'SourceGraphic')
 
-    // Create force simulation
+    // Create force simulation with tuned physics for organic feel
     const simulation = d3
       .forceSimulation(nodes)
       .force('link', d3.forceLink(links)
         .id(d => d.id)
-        .strength(d => 0.3 + d.jaccard * 0.5)
+        .distance(d => 120 - d.jaccard * 80) // Similar cuisines closer
+        .strength(d => 0.2 + d.jaccard * 0.6)
       )
-      .force('charge', d3.forceManyBody().strength(-400))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collide', d3.forceCollide(d => 12 + d.compoundCount / 18))
+      .force('charge', d3.forceManyBody().strength(-600).distanceMax(400))
+      .force('center', d3.forceCenter(width / 2, height / 2).strength(0.08))
+      .force('collide', d3.forceCollide(d => 16 + d.compoundCount / 16).strength(0.8))
+      .velocityDecay(0.4) // Higher damping for smoother settling
+      .alphaDecay(0.02) // Slower cooling for more natural movement
 
     // Render edges with curved bezier paths
     const edges = svg
@@ -168,6 +172,32 @@ const ForceNetwork = () => {
       setHoveredCuisine(d.id)
       const nodeId = d.id
 
+      // Build bridge info for the panel
+      const connections = links
+        .filter(l => (l.source.id || l.source) === nodeId || (l.target.id || l.target) === nodeId)
+        .map(l => {
+          const otherId = (l.source.id || l.source) === nodeId
+            ? (l.target.id || l.target)
+            : (l.source.id || l.source)
+          const overlap = getOverlap(nodeId, otherId)
+          return {
+            cuisine: CUISINE_NAMES[otherId],
+            color: CUISINE_COLORS[otherId],
+            jaccard: l.jaccard,
+            sharedCount: overlap?.shared_count || 0,
+            topCompounds: (overlap?.shared_compounds || []).slice(0, 3),
+          }
+        })
+        .sort((a, b) => b.jaccard - a.jaccard)
+        .slice(0, 5)
+
+      setBridgeInfo({
+        cuisine: CUISINE_NAMES[nodeId],
+        color: CUISINE_COLORS[nodeId],
+        compoundCount: d.compoundCount,
+        connections,
+      })
+
       // Highlight connected nodes
       nodeGroups.style('opacity', node => {
         const isConnected = node.id === nodeId ||
@@ -212,6 +242,7 @@ const ForceNetwork = () => {
 
     nodeGroups.on('mouseleave', () => {
       setHoveredCuisine(null)
+      setBridgeInfo(null)
       nodeGroups.style('opacity', 1)
       edges.style('opacity', 0.3)
       circles.transition().duration(200).attr('r', d => 12 + d.compoundCount / 18)
@@ -270,18 +301,55 @@ const ForceNetwork = () => {
         style={{ height: '600px', backgroundColor: '#0a0a0f' }}
       />
 
-      {/* Legend - show ALL 10 cuisines */}
-      <div className="mt-4 flex flex-wrap gap-3 text-xs">
+      {/* Molecular Bridge Panel */}
+      {bridgeInfo && (
+        <div className="mt-3 bg-slate-900/80 border border-slate-700/50 rounded-lg p-4 backdrop-blur animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: bridgeInfo.color }} />
+            <span className="font-semibold text-sm" style={{ color: bridgeInfo.color }}>
+              {bridgeInfo.cuisine}
+            </span>
+            <span className="text-xs text-slate-500">{bridgeInfo.compoundCount} compounds</span>
+          </div>
+          <div className="space-y-2">
+            {bridgeInfo.connections.map((conn, i) => (
+              <div key={i} className="flex items-start gap-3 text-xs">
+                <div className="flex items-center gap-1.5 min-w-[100px]">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: conn.color }} />
+                  <span className="text-slate-300 truncate">{conn.cuisine}</span>
+                </div>
+                <span className="text-[#d4a574] font-mono flex-shrink-0">
+                  {(conn.jaccard * 100).toFixed(0)}%
+                </span>
+                <span className="text-slate-500 flex-shrink-0">{conn.sharedCount} shared</span>
+                <span className="text-slate-600 truncate">
+                  {conn.topCompounds.join(', ')}
+                </span>
+              </div>
+            ))}
+          </div>
+          {bridgeInfo.connections.length === 0 && (
+            <p className="text-xs text-slate-500">No strong connections in top pairs</p>
+          )}
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="mt-3 flex flex-wrap gap-3 text-xs">
         {cuisineIds.map(id => (
-          <div key={id} className="flex items-center gap-2">
+          <div key={id} className="flex items-center gap-1.5">
             <div
-              className="w-3 h-3 rounded-full"
+              className="w-2.5 h-2.5 rounded-full"
               style={{ backgroundColor: CUISINE_COLORS[id] }}
             />
-            <span className="text-slate-300">{CUISINE_NAMES[id]}</span>
+            <span className="text-slate-400">{CUISINE_NAMES[id]}</span>
           </div>
         ))}
       </div>
+
+      <p className="mt-2 text-xs text-slate-600">
+        Drag nodes to rearrange &bull; Hover for molecular bridges &bull; Node size = compound count
+      </p>
     </div>
   )
 }
