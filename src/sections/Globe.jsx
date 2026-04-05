@@ -1,11 +1,28 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Line } from '@react-three/drei'
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import * as THREE from 'three'
 import ScrollSection from '../components/ScrollSection'
 import useStore from '../store'
 import { CUISINE_COLORS, CUISINE_NAMES, CUISINE_GEO } from '../data/constants'
 import { cuisineIds, sortedPairs, getJaccard, cuisineSummaries } from '../data/computed'
+
+/**
+ * Detect if we should use the 2D fallback:
+ * - Mobile/small screens (width < 768)
+ * - No WebGL support
+ */
+function shouldUseFallback() {
+  if (typeof window === 'undefined') return true
+  if (window.innerWidth < 768) return true
+  try {
+    const canvas = document.createElement('canvas')
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    return !gl
+  } catch {
+    return true
+  }
+}
 
 /**
  * Convert lat/lng to 3D sphere position
@@ -247,9 +264,106 @@ function SelectedCuisinePanel() {
 }
 
 /**
- * Main Globe section with 3D visualization
+ * 2D Flat Map Fallback for mobile / no-WebGL
+ * Renders cuisine nodes on a Mercator-like projection with SVG arcs.
+ */
+function FlatMapFallback() {
+  const setSelectedCuisine = useStore((s) => s.setSelectedCuisine)
+  const selectedCuisine = useStore((s) => s.selectedCuisine)
+
+  const width = 700
+  const height = 400
+  const padding = 40
+
+  // Simple Mercator projection
+  function project(lat, lng) {
+    const x = padding + ((lng + 180) / 360) * (width - 2 * padding)
+    const y = padding + ((90 - lat) / 180) * (height - 2 * padding)
+    return { x, y }
+  }
+
+  const positions = cuisineIds.reduce((acc, id) => {
+    const geo = CUISINE_GEO[id]
+    acc[id] = project(geo.lat, geo.lng)
+    return acc
+  }, {})
+
+  const topPairs = sortedPairs.slice(0, 15)
+
+  return (
+    <div className="relative rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900/50 p-4">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="2D map of cuisine connections showing flavor similarity arcs between 10 world cuisines">
+        {/* Arcs */}
+        {topPairs.map((pair, idx) => {
+          const p1 = positions[pair.c1]
+          const p2 = positions[pair.c2]
+          if (!p1 || !p2) return null
+          const midX = (p1.x + p2.x) / 2
+          const midY = (p1.y + p2.y) / 2 - 30 * pair.jaccard
+          return (
+            <path
+              key={idx}
+              d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
+              fill="none"
+              stroke="#64748b"
+              strokeWidth={0.5 + pair.jaccard * 2}
+              opacity={0.2 + pair.jaccard * 0.4}
+            />
+          )
+        })}
+
+        {/* Nodes */}
+        {cuisineIds.map(id => {
+          const pos = positions[id]
+          const isSelected = selectedCuisine === id
+          return (
+            <g key={id} onClick={() => setSelectedCuisine(id)} style={{ cursor: 'pointer' }}>
+              <circle
+                cx={pos.x}
+                cy={pos.y}
+                r={isSelected ? 10 : 7}
+                fill={CUISINE_COLORS[id]}
+                opacity={isSelected ? 1 : 0.8}
+                stroke={isSelected ? '#fff' : 'none'}
+                strokeWidth={isSelected ? 2 : 0}
+              />
+              <text
+                x={pos.x}
+                y={pos.y - 12}
+                textAnchor="middle"
+                fill={CUISINE_COLORS[id]}
+                fontSize="9"
+                fontWeight="600"
+              >
+                {CUISINE_NAMES[id]}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <SelectedCuisinePanel />
+
+      <div className="text-xs text-slate-500 mt-2 text-center">
+        Tap a node to explore &bull; 2D view (3D globe available on desktop)
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Main Globe section with 3D visualization (or 2D fallback on mobile)
  */
 export const Globe = () => {
+  const [useFallback, setUseFallback] = useState(false)
+
+  useEffect(() => {
+    setUseFallback(shouldUseFallback())
+    const handleResize = () => setUseFallback(shouldUseFallback())
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   return (
     <ScrollSection id="globe" className="w-full py-20 px-4 bg-slate-950">
       <div className="max-w-7xl mx-auto">
@@ -257,35 +371,36 @@ export const Globe = () => {
           Interactive Cuisine Topology
         </h2>
 
-        {/* Globe Container */}
-        <div className="relative rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900/50" style={{ minHeight: '600px' }}>
-          <Canvas camera={{ position: [0, 0, 5.5], fov: 75 }}>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} intensity={0.8} />
-            <pointLight position={[-10, -10, -10]} intensity={0.3} />
+        {useFallback ? (
+          <FlatMapFallback />
+        ) : (
+          <div className="relative rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900/50" style={{ minHeight: '600px' }}>
+            <Canvas camera={{ position: [0, 0, 5.5], fov: 75 }}>
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 10, 10]} intensity={0.8} />
+              <pointLight position={[-10, -10, -10]} intensity={0.3} />
 
-            <GlobeVisualization />
+              <GlobeVisualization />
 
-            <OrbitControls
-              enableZoom={true}
-              enablePan={true}
-              autoRotate={useStore((s) => s.globeAutoRotate)}
-              autoRotateSpeed={2}
-            />
-          </Canvas>
+              <OrbitControls
+                enableZoom={true}
+                enablePan={true}
+                autoRotate={useStore((s) => s.globeAutoRotate)}
+                autoRotateSpeed={2}
+              />
+            </Canvas>
 
-          {/* Selected cuisine panel */}
-          <SelectedCuisinePanel />
+            <SelectedCuisinePanel />
 
-          {/* Instructions */}
-          <div className="absolute bottom-4 left-4 text-xs text-slate-400 z-10">
-            <p>Click a node to explore • Drag to rotate</p>
+            <div className="absolute bottom-4 left-4 text-xs text-slate-400 z-10">
+              <p>Click a node to explore &bull; Drag to rotate</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Legend */}
         <div className="mt-8 bg-slate-900/50 border border-slate-700/50 rounded-lg p-6">
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-slate-400 text-sm mb-4" role="note">
             <span className="text-[#d4a574] font-semibold">Nodes:</span> 10 world cuisines at their geographic origin. Brightness indicates uniqueness of flavor profile.
           </p>
           <p className="text-slate-400 text-sm">

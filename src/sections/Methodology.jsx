@@ -134,24 +134,36 @@ export default function Methodology() {
       <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-8 mb-8">
         <h3 className="text-lg font-semibold mb-4 text-slate-200">GI Value Confidence</h3>
         <p className="text-sm text-slate-300 mb-4">
-          GI values in this dataset come from two sources with different confidence levels:
+          GI values in this dataset come from three categories with different confidence levels.
+          Validation analysis (see <code className="text-slate-300">scripts/validate_gi.py</code>) shows
+          that <strong className="text-amber-400">83.2%</strong> of values are estimated and
+          <strong className="text-green-400">16.8%</strong> are from published measurements.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="border border-green-800/50 bg-green-900/10 rounded-lg p-4">
-            <h4 className="font-semibold text-green-400 text-sm mb-2">Measured (Published)</h4>
+            <h4 className="font-semibold text-green-400 text-sm mb-2">Measured (325 meals, 16.8%)</h4>
             <p className="text-xs text-slate-400">
               GI values directly from peer-reviewed sources: PMC7791047 (1,100+ non-Western foods),
               PMC9304465 (Indian foods), PMC9552392 (Indian GI compendium), and the International
-              GI Tables. These have been determined via standardized in-vivo testing protocols.
+              GI Tables. Determined via standardized in-vivo testing protocols.
             </p>
           </div>
           <div className="border border-amber-800/50 bg-amber-900/10 rounded-lg p-4">
-            <h4 className="font-semibold text-amber-400 text-sm mb-2">Estimated (Category-based)</h4>
+            <h4 className="font-semibold text-amber-400 text-sm mb-2">Estimated (1,337 meals, 69.2%)</h4>
             <p className="text-xs text-slate-400">
-              Some meals lack direct GI measurements. These are estimated from the dominant ingredient
-              category&apos;s published GI range (e.g., &ldquo;legume range 22&ndash;38&rdquo;). Estimated values are
-              flagged in the dataset with &ldquo;est.&rdquo; prefix in the gi_ref field.
-              Sensitivity analyses should verify that conclusions hold when restricted to measured values.
+              Estimated from dominant ingredient category GI ranges (e.g., &ldquo;legume range 22&ndash;38&rdquo;).
+              Flagged with &ldquo;est.&rdquo; prefix in gi_ref. The GI Sensitivity table in the Technical tab
+              shows per-cuisine impact of excluding these values.
+            </p>
+          </div>
+          <div className="border border-red-800/50 bg-red-900/10 rounded-lg p-4">
+            <h4 className="font-semibold text-red-400 text-sm mb-2">GI=0 Proteins (270 meals, 14.0%)</h4>
+            <p className="text-xs text-slate-400">
+              Pure protein dishes (grilled meat, fish, eggs) assigned GI=0 because protein alone has
+              negligible glycemic response. While technically correct for isolated macronutrients,
+              this is an oversimplification &mdash; real meals include sides, sauces, and preparation
+              methods that affect glycemic response. These should be excluded from GI-centric analyses
+              or assigned values based on typical meal context.
             </p>
           </div>
         </div>
