@@ -11,6 +11,7 @@ const TopologyExplorer = lazy(() => import('./sections/TopologyExplorer'))
 const CompoundDive = lazy(() => import('./sections/CompoundDive'))
 const ClinicalTool = lazy(() => import('./sections/ClinicalTool'))
 const Moat = lazy(() => import('./sections/Moat'))
+const KeyFindings = lazy(() => import('./sections/KeyFindings'))
 const Methodology = lazy(() => import('./sections/Methodology'))
 
 function SectionLoader({ label }) {
@@ -58,6 +59,12 @@ export default function App() {
       <ErrorBoundary label="Traditional vs Modern">
         <Suspense fallback={<SectionLoader label="Traditional vs Modern" />}>
           <Moat />
+        </Suspense>
+      </ErrorBoundary>
+
+      <ErrorBoundary label="Key Findings">
+        <Suspense fallback={<SectionLoader label="Key Findings" />}>
+          <KeyFindings />
         </Suspense>
       </ErrorBoundary>
 

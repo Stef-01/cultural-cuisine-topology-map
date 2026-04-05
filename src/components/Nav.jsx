@@ -7,8 +7,9 @@ const SECTIONS = [
   { id: 'topology', label: 'Topology' },
   { id: 'compounds', label: 'Compounds' },
   { id: 'clinical', label: 'Clinical' },
-  { id: 'moat', label: 'Moat' },
-  { id: 'methodology', label: 'Methodology' },
+  { id: 'moat', label: 'Grandmother' },
+  { id: 'findings', label: 'Findings' },
+  { id: 'methodology', label: 'Methods' },
 ];
 
 /**
