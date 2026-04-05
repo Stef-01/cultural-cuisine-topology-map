@@ -55,6 +55,50 @@ export const CATEGORY_LABELS = {
   snack: 'Snack',
 }
 
+/**
+ * TRADITIONAL vs MODERN categorization rationale:
+ *
+ * "Traditional" = food preparation methods and ingredients that predate
+ * industrial food processing (roughly pre-1950s for most cultures).
+ * These categories align with how foods were prepared using locally
+ * available, minimally processed ingredients:
+ *   - legume: Pulses and beans — staple protein source across all 10 cuisines
+ *     for millennia (dal, frijoles, natto, foul medames)
+ *   - vegetable: Fresh and cooked vegetables — universal traditional base
+ *   - protein: Fish, poultry, meat — traditional animal protein preparations
+ *   - fermented: Kimchi, miso, injera, yogurt — ancient preservation methods
+ *   - soup: Broths and stews — foundational cooking method in all cultures
+ *   - dairy: Yogurt, cheese, buttermilk — traditional in pastoral cultures
+ *   - cereal_low: Whole/ancient grains — teff, millet, quinoa, brown rice,
+ *     barley — the grains that sustained populations pre-industrialization
+ *   - salad: Raw preparations — traditional across Mediterranean, Middle
+ *     Eastern, and Southeast Asian cuisines
+ *
+ * "Modern" = categories dominated by industrial processing, refined
+ * ingredients, or preparation methods that became widespread only after
+ * industrialization of the food supply:
+ *   - cereal_high: Refined white flour, white rice, instant noodles —
+ *     products of industrial milling that strip fiber and nutrients
+ *   - dessert: Sugar-dense preparations — while sweets existed historically,
+ *     refined sugar availability post-1800s transformed these dramatically
+ *   - fried: Deep-fried foods — while frying existed, cheap vegetable oils
+ *     and commercial fryers made this a dominant modern preparation
+ *   - snack: Packaged/processed convenience foods — a 20th century category
+ *
+ * LIMITATIONS of this classification:
+ *   - Some overlap exists (e.g., tempura in Japanese cuisine is traditional
+ *     but categorized as fried; jaggery-based sweets are ancient)
+ *   - The binary is necessarily reductive; a spectrum from "ancestral" to
+ *     "ultra-processed" (cf. NOVA classification) would be more nuanced
+ *   - Regional variation within cuisines is not captured
+ *   - The classification is based on dominant preparation method, not
+ *     individual recipe history
+ *
+ * REFERENCES:
+ *   - Monteiro et al. (2019) NOVA classification, Public Health Nutr.
+ *   - Popkin (2006) "Global nutrition transition", Nutr. Rev.
+ *   - Kearney (2010) "Food consumption trends", Phil. Trans. R. Soc.
+ */
 export const TRADITIONAL_CATEGORIES = [
   'legume', 'vegetable', 'protein', 'fermented', 'soup', 'dairy', 'cereal_low', 'salad'
 ]
@@ -62,6 +106,27 @@ export const TRADITIONAL_CATEGORIES = [
 export const MODERN_CATEGORIES = [
   'cereal_high', 'dessert', 'fried', 'snack'
 ]
+
+/**
+ * Category epoch mapping for more granular analysis.
+ * Aligns with the NOVA ultra-processed food classification where applicable.
+ */
+export const CATEGORY_EPOCH = {
+  legume: { epoch: 'ancestral', nova: 1, label: 'Unprocessed/minimally processed' },
+  vegetable: { epoch: 'ancestral', nova: 1, label: 'Unprocessed/minimally processed' },
+  protein: { epoch: 'ancestral', nova: 1, label: 'Unprocessed/minimally processed' },
+  fermented: { epoch: 'ancestral', nova: 3, label: 'Processed (fermentation)' },
+  soup: { epoch: 'ancestral', nova: 2, label: 'Culinary preparation' },
+  dairy: { epoch: 'ancestral', nova: 1, label: 'Unprocessed/minimally processed' },
+  cereal_low: { epoch: 'ancestral', nova: 1, label: 'Unprocessed/minimally processed' },
+  salad: { epoch: 'ancestral', nova: 1, label: 'Unprocessed/minimally processed' },
+  cereal_high: { epoch: 'industrial', nova: 3, label: 'Processed (refined)' },
+  dessert: { epoch: 'industrial', nova: 4, label: 'Ultra-processed' },
+  fried: { epoch: 'industrial', nova: 4, label: 'Ultra-processed' },
+  snack: { epoch: 'industrial', nova: 4, label: 'Ultra-processed' },
+  fruit: { epoch: 'ancestral', nova: 1, label: 'Unprocessed/minimally processed' },
+  mixed: { epoch: 'mixed', nova: 2, label: 'Culinary preparation' },
+}
 
 export const COMPOUND_FAMILIES = {
   terpenes: [

@@ -31,12 +31,22 @@ export default function Moat() {
         <DumbbellChart data={tvmData} />
       </div>
 
+      {/* Statistical Summary */}
+      <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-6 mb-8">
+        <h3 className="font-semibold text-sm text-slate-400 mb-2">Statistical Summary</h3>
+        <p className="text-xs text-slate-400">
+          Traditional vs. modern GI differences tested with Welch&apos;s t-test (Bonferroni-corrected, &alpha; = 0.005).
+          Effect sizes reported as Cohen&apos;s d. 95% bootstrap confidence intervals (n=2,000, seed=42).
+          Hover over data points in the chart above for per-cuisine statistics.
+        </p>
+      </div>
+
       {/* Insight Cards */}
       <div className="grid grid-cols-2 gap-6">
         <div className="border-l-4 border-green-500 bg-green-900/20 rounded-lg p-6">
           <h3 className="font-semibold text-lg text-green-400 mb-3">The Pattern</h3>
           <p className="text-sm text-green-300/90">
-            Traditional foods average GI 15–45, providing stable energy release without insulin spikes.
+            Traditional foods average GI 15&ndash;45, providing stable energy release without insulin spikes.
             These are the recipes passed down through generations because they sustained health and vitality.
           </p>
         </div>
@@ -44,8 +54,9 @@ export default function Moat() {
         <div className="border-l-4 border-orange-500 bg-orange-900/20 rounded-lg p-6">
           <h3 className="font-semibold text-lg text-orange-400 mb-3">The Disruption</h3>
           <p className="text-sm text-orange-300/90">
-            Modern adaptations push averages to 55–80+, introducing refined sugars, processed thickeners,
-            and industrial shortcuts. The choice is clear: return to traditional foundations for better health outcomes.
+            Modern adaptations push averages to 55&ndash;80+, introducing refined sugars, processed thickeners,
+            and industrial shortcuts. The traditional-to-modern gap is statistically significant across
+            cuisines where sufficient data exists (see chart for per-cuisine p-values).
           </p>
         </div>
       </div>

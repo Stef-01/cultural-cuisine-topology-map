@@ -9,7 +9,7 @@ const PersistenceDiagram = () => {
   useEffect(() => {
     if (!svgRef.current) return
 
-    const { beta0Features, beta1Features } = computePersistenceDiagram()
+    const { beta0Features, beta1Features, metadata } = computePersistenceDiagram()
 
     const width = 400
     const height = 400
@@ -169,15 +169,24 @@ const PersistenceDiagram = () => {
       .attr('font-weight', 600)
       .text('Persistence Diagram — Vietoris-Rips on Flavor Compound Jaccard Distances')
 
-    // Footer
+    // Footer with methodology note
     svg
       .append('text')
       .attr('x', width / 2)
-      .attr('y', height - 5)
+      .attr('y', height - 14)
       .attr('text-anchor', 'middle')
       .attr('fill', '#a89f94')
-      .attr('font-size', 9)
-      .text('Computed from 333 named compounds across 73 ingredients')
+      .attr('font-size', 8)
+      .text(`β₀: Union-Find (exact) | β₁: Boundary reduction (exact) | n=${metadata.n_points} cuisines, ${metadata.n_edges} edges`)
+
+    svg
+      .append('text')
+      .attr('x', width / 2)
+      .attr('y', height - 4)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#f59e0b')
+      .attr('font-size', 7)
+      .text('Note: n=10 is illustrative; interpret as hierarchical similarity summary, not deep topological structure')
 
     // Legend
     const legendX = margin.left + 10

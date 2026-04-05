@@ -87,13 +87,21 @@ const DumbbellChart = () => {
       .attr('fill', '#6a9968')
       .attr('opacity', 0.8)
       .on('mouseenter', (event, d) => {
+        const stats = d.statistics || {}
         setTooltip({
           x: event.pageX,
           y: event.pageY,
           cuisine: CUISINE_NAMES[d.cuisine],
           type: 'Traditional',
           gi: d.traditional.avgGI.toFixed(1),
+          sd: (d.traditional.sdGI || 0).toFixed(1),
           count: d.traditional.count,
+          pValue: stats.tTest ? stats.tTest.p.toFixed(4) : null,
+          stars: stats.stars || '',
+          effectSize: stats.cohensD != null ? stats.cohensD.toFixed(2) : null,
+          effectLabel: stats.effectLabel || '',
+          ciLow: stats.bootstrapCI ? stats.bootstrapCI.lower.toFixed(1) : null,
+          ciHigh: stats.bootstrapCI ? stats.bootstrapCI.upper.toFixed(1) : null,
         })
       })
       .on('mouseleave', () => setTooltip(null))
@@ -109,18 +117,26 @@ const DumbbellChart = () => {
       .attr('fill', '#c17d5d')
       .attr('opacity', 0.8)
       .on('mouseenter', (event, d) => {
+        const stats = d.statistics || {}
         setTooltip({
           x: event.pageX,
           y: event.pageY,
           cuisine: CUISINE_NAMES[d.cuisine],
           type: 'Modern',
           gi: d.modern.avgGI.toFixed(1),
+          sd: (d.modern.sdGI || 0).toFixed(1),
           count: d.modern.count,
+          pValue: stats.tTest ? stats.tTest.p.toFixed(4) : null,
+          stars: stats.stars || '',
+          effectSize: stats.cohensD != null ? stats.cohensD.toFixed(2) : null,
+          effectLabel: stats.effectLabel || '',
+          ciLow: stats.bootstrapCI ? stats.bootstrapCI.lower.toFixed(1) : null,
+          ciHigh: stats.bootstrapCI ? stats.bootstrapCI.upper.toFixed(1) : null,
         })
       })
       .on('mouseleave', () => setTooltip(null))
 
-    // Gap labels
+    // Gap labels with significance stars
     g.selectAll('text.gap')
       .data(data.filter(d => d.gap > 0))
       .join('text')
@@ -129,8 +145,11 @@ const DumbbellChart = () => {
       .attr('y', d => yScale(d.cuisine) + yScale.bandwidth() / 2 - 8)
       .attr('text-anchor', 'middle')
       .attr('font-size', 9)
-      .attr('fill', '#cbd5e1')
-      .text(d => `+${d.gap.toFixed(1)}`)
+      .attr('fill', d => d.statistics?.tTest?.significant ? '#fbbf24' : '#cbd5e1')
+      .text(d => {
+        const stars = d.statistics?.stars || ''
+        return `+${d.gap.toFixed(1)} ${stars}`
+      })
 
     // Y axis labels (cuisine names)
     g.selectAll('text.label-cuisine')
@@ -203,7 +222,16 @@ const DumbbellChart = () => {
       .attr('fill', '#cbd5e1')
       .attr('font-size', 12)
       .attr('font-weight', 600)
-      .text('Traditional vs Modern GI Gap')
+      .text('Traditional vs Modern GI Gap (Welch\'s t-test, Bonferroni-corrected)')
+
+    // Significance legend at bottom
+    svg
+      .append('text')
+      .attr('x', margin.left)
+      .attr('y', height - 5)
+      .attr('fill', '#64748b')
+      .attr('font-size', 8)
+      .text('* p<0.05  ** p<0.01  *** p<0.001 (Bonferroni α=0.005, highlighted = significant)')
   }, [dimensions])
 
   return (
@@ -220,8 +248,15 @@ const DumbbellChart = () => {
           style={{ left: `${tooltip.x + 10}px`, top: `${tooltip.y + 10}px` }}
         >
           <div className="font-semibold">{tooltip.cuisine}</div>
-          <div>{tooltip.type} Avg GI: {tooltip.gi}</div>
+          <div>{tooltip.type} Avg GI: {tooltip.gi} (SD: {tooltip.sd})</div>
           <div className="text-slate-400">{tooltip.count} meals</div>
+          {tooltip.pValue && (
+            <div className="text-slate-400 mt-1 border-t border-slate-700 pt-1">
+              <div>p = {tooltip.pValue} {tooltip.stars}</div>
+              <div>Cohen&apos;s d = {tooltip.effectSize} ({tooltip.effectLabel})</div>
+              <div>95% CI: [{tooltip.ciLow}, {tooltip.ciHigh}]</div>
+            </div>
+          )}
         </div>
       )}
     </div>
