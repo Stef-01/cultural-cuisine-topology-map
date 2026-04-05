@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 165, 116, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 165, 116, 0.5);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(212, 165, 116, 0.3);
+  color: #e8e4dd;
+}
+
+/* Canvas containers */
+.canvas-container {
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(212, 165, 116, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Tooltip */
+.viz-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(10, 10, 15, 0.95);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  max-width: 280px;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+/* Glow effect for nodes */
+.node-glow {
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Tab button transitions */
+.tab-btn {
+  @apply px-5 py-2.5 text-sm border rounded transition-all duration-300 cursor-pointer;
+  border-color: rgba(212, 165, 116, 0.3);
+  background: rgba(212, 165, 116, 0.08);
+}
+.tab-btn:hover {
+  border-color: rgba(212, 165, 116, 0.6);
+}
+.tab-btn.active {
+  background: #d4a574;
+  color: #0a0a0f;
+  border-color: #d4a574;
+  font-weight: 600;
+}
+
+/* Meal card */
+.meal-card {
+  @apply p-3 rounded-lg border transition-all duration-200;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(212, 165, 116, 0.1);
+}
+.meal-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(212, 165, 116, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Section reveal animation */
+.section-hidden {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Navigation progress bar */
+.nav-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #d4a574, #d4a574);
+  z-index: 60;
+  transition: width 0.1s ease-out;
+}
+
+/* D3 SVG styles */
+.d3-container svg {
+  overflow: visible;
+}
+.d3-container .link {
+  stroke-opacity: 0.4;
+  transition: stroke-opacity 0.3s;
+}
+.d3-container .link.highlighted {
+  stroke-opacity: 0.9;
+}
+.d3-container .link.dimmed {
+  stroke-opacity: 0.08;
+}
+.d3-container .node circle {
+  cursor: pointer;
+  transition: filter 0.3s;
+}
+.d3-container .node.dimmed circle {
+  opacity: 0.2;
+}
+.d3-container .node.dimmed text {
+  opacity: 0.15;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .technical-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
