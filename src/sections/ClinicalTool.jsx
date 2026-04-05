@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import ScrollSection from '../components/ScrollSection'
 import BeeswarmChart from '../viz/BeeswarmChart'
-import { data, getGIDistribution, cuisineIds } from '../data/computed'
+import { data, getGIDistribution, cuisineIds, isGIZeroProtein } from '../data/computed'
 import { CUISINE_COLORS, CUISINE_NAMES, CATEGORY_LABELS, GI_ZONES } from '../data/constants'
 import useStore from '../store'
 
@@ -9,6 +9,7 @@ export default function ClinicalTool() {
   const { clinicalCuisine, setClinicalCuisine, clinicalCategory, setClinicalCategory } = useStore()
   const [activeCuisine, setActiveCuisine] = useState(clinicalCuisine || 'indian')
   const [activeCategory, setActiveCategory] = useState(clinicalCategory || 'all')
+  const [hideGIZero, setHideGIZero] = useState(false)
 
   // Get available categories
   const categories = useMemo(() => {
@@ -32,8 +33,12 @@ export default function ClinicalTool() {
       meals = meals.filter(m => m.category === activeCategory)
     }
 
+    if (hideGIZero) {
+      meals = meals.filter(m => !isGIZeroProtein(m))
+    }
+
     return meals.sort((a, b) => (a.gi || 100) - (b.gi || 100))
-  }, [activeCuisine, activeCategory])
+  }, [activeCuisine, activeCategory, hideGIZero])
 
   // Count meals in each GI zone
   const giStats = useMemo(() => {
@@ -77,7 +82,7 @@ export default function ClinicalTool() {
       {/* Cuisine Selector */}
       <div className="mb-8">
         <h3 className="text-sm font-semibold text-slate-300 mb-4">Select Cuisine</h3>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {cuisineIds.slice(0, 10).map(cid => {
             const cuisine = data.cuisines[cid]
             const mealCount = cuisine?.meals?.length || 0
@@ -106,9 +111,21 @@ export default function ClinicalTool() {
         </div>
       </div>
 
-      {/* Category Filter */}
+      {/* Category Filter + GI=0 Toggle */}
       <div className="mb-8">
-        <h3 className="text-sm font-semibold text-slate-300 mb-4">Filter by Category</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-slate-300">Filter by Category</h3>
+          <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={hideGIZero}
+              onChange={(e) => setHideGIZero(e.target.checked)}
+              className="rounded border-slate-600 bg-slate-800 text-[#d4a574] focus:ring-[#d4a574]"
+            />
+            Hide GI=0 proteins
+            <span className="text-slate-600" title="270 protein-only meals (meat, fish, eggs) have GI=0. While technically correct, this can skew GI analyses.">?</span>
+          </label>
+        </div>
         <div className="flex flex-wrap gap-3">
           {categories.map(cat => (
             <button
@@ -127,7 +144,7 @@ export default function ClinicalTool() {
       </div>
 
       {/* GI Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-green-900/20 rounded-lg p-4 border-l-4 border-green-500">
           <div className="text-2xl font-bold text-green-400">{giStats.low}</div>
           <div className="text-xs text-green-300/80 mt-1">Low GI (&lt;35)</div>
@@ -185,8 +202,13 @@ export default function ClinicalTool() {
                 <span>{compoundCount} compounds</span>
                 <span>{ingredientCount} ingredients</span>
               </div>
-              {meal.giReference && (
-                <div className="text-xs italic text-slate-500">{meal.giReference}</div>
+              {meal.gi_ref && (
+                <div className="text-xs italic text-slate-500">
+                  {meal.gi_ref}
+                  {isGIZeroProtein(meal) && (
+                    <span className="ml-1 text-amber-500 not-italic">(protein-only GI)</span>
+                  )}
+                </div>
               )}
             </div>
           )

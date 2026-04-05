@@ -1,9 +1,27 @@
 import React, { useState, useMemo } from 'react'
 import ScrollSection from '../components/ScrollSection'
 import RadarChart from '../viz/RadarChart'
-import { data, computeFlavorFingerprints } from '../data/computed'
-import { CUISINE_NAMES, CUISINE_COLORS } from '../data/constants'
+import { data, computeFlavorFingerprints, computeUniversalCompounds } from '../data/computed'
+import { CUISINE_NAMES, CUISINE_COLORS, COMPOUND_FAMILIES } from '../data/constants'
 import useStore from '../store'
+
+function getCompoundFamily(name) {
+  for (const [family, members] of Object.entries(COMPOUND_FAMILIES)) {
+    if (members.includes(name)) return family
+  }
+  return 'other'
+}
+
+const FAMILY_COLORS = {
+  terpenes: '#22c55e',
+  sulfides: '#eab308',
+  aldehydes: '#3b82f6',
+  phenolics: '#ef4444',
+  lactones: '#a855f7',
+  pyrazines: '#f97316',
+  acids: '#06b6d4',
+  other: '#64748b',
+}
 
 export default function CompoundDive() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -64,9 +82,9 @@ export default function CompoundDive() {
 
   return (
     <ScrollSection id="compounds" title="Compound Deep Dive">
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Search and Results */}
-        <div className="col-span-1 bg-slate-900/50 border border-slate-700/50 rounded-lg p-6 h-fit max-h-96 overflow-y-auto">
+        <div className="col-span-1 bg-slate-900/50 border border-slate-700/50 rounded-lg p-6 h-fit max-h-[500px] overflow-y-auto">
           <input
             type="text"
             placeholder="Search compounds..."
@@ -74,26 +92,48 @@ export default function CompoundDive() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded mb-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#d4a574]"
           />
-          <div className="space-y-2">
-            {filteredCompounds.slice(0, 30).map((compound) => (
-              <button
-                key={compound.name}
-                onClick={() => setSelectedCompound(compound.name)}
-                className={`w-full text-left px-3 py-2 rounded text-sm transition ${
-                  selectedCompound === compound.name
-                    ? 'bg-[#d4a574] text-[#0a0a0f]'
-                    : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50'
-                }`}
-              >
-                <div className="font-medium">{compound.name}</div>
-                <div className="text-xs opacity-75">{compound.cuisines?.size || 0} cuisines</div>
-              </button>
-            ))}
+          <div className="text-xs text-slate-500 mb-2">
+            {filteredCompounds.length} compounds{searchQuery && ` matching "${searchQuery}"`}
+          </div>
+          <div className="space-y-1.5">
+            {filteredCompounds.slice(0, 40).map((compound) => {
+              const family = getCompoundFamily(compound.name)
+              return (
+                <button
+                  key={compound.name}
+                  onClick={() => setSelectedCompound(compound.name)}
+                  className={`w-full text-left px-3 py-2 rounded text-sm transition ${
+                    selectedCompound === compound.name
+                      ? 'bg-[#d4a574] text-[#0a0a0f]'
+                      : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium truncate">{compound.name}</span>
+                    <span
+                      className="flex-shrink-0 ml-2 w-2 h-2 rounded-full"
+                      style={{ backgroundColor: FAMILY_COLORS[family] || '#64748b' }}
+                      title={family}
+                    />
+                  </div>
+                  <div className="text-xs opacity-75 flex items-center gap-2">
+                    <span>{compound.cuisines?.size || 0} cuisines</span>
+                    <span className="text-slate-600">&bull;</span>
+                    <span className="capitalize">{family}</span>
+                  </div>
+                </button>
+              )
+            })}
+            {filteredCompounds.length > 40 && (
+              <div className="text-xs text-slate-500 text-center py-2">
+                +{filteredCompounds.length - 40} more — refine your search
+              </div>
+            )}
           </div>
         </div>
 
         {/* Compound Details */}
-        <div className="col-span-2 space-y-6">
+        <div className="col-span-1 md:col-span-2 space-y-6">
           {selectedCompound && (
             <>
               <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-6">

@@ -536,6 +536,20 @@ export function computeUniversalCompounds() {
     .sort((a, b) => b.count - a.count)
 }
 
+// ─── GI=0 PROTEIN FILTER ─────────────────────────────────────
+// 270 meals in the dataset have GI=0 (pure protein: meat, fish, eggs).
+// While technically correct (pure protein has negligible glycemic response),
+// this skews GI analyses. Provide utilities to filter or flag these.
+const GI_ZERO_PROTEIN_CATEGORIES = ['protein']
+
+export function isGIZeroProtein(meal) {
+  return meal.gi === 0 && GI_ZERO_PROTEIN_CATEGORIES.includes(meal.category)
+}
+
+export function filterGIZeroProtein(meals) {
+  return meals.filter(m => !isGIZeroProtein(m))
+}
+
 // ─── GI DISTRIBUTION PER CUISINE ─────────────────────────────
 export function getGIDistribution(cuisineId) {
   const meals = rawData.cuisines[cuisineId]?.meals || []
