@@ -35,6 +35,7 @@ const DumbbellChart = () => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Traditional vs Modern glycemic index comparison across 10 world cuisines')
 
     const yScale = d3
       .scaleBand()
@@ -240,6 +241,8 @@ const DumbbellChart = () => {
         ref={svgRef}
         className="w-full border border-slate-700/50 rounded"
         style={{ height: '400px', backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Traditional vs Modern glycemic index comparison across 10 world cuisines"
       />
 
       {tooltip && (

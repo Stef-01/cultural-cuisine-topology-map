@@ -47,6 +47,7 @@ const BeeswarmChart = ({ cuisineId = null }) => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Glycemic index distribution beeswarm plot')
 
     // Scales
     const xScale = d3.scaleLinear().domain([0, 100]).range([0, innerWidth])
@@ -152,6 +153,8 @@ const BeeswarmChart = ({ cuisineId = null }) => {
         ref={svgRef}
         className="w-full border border-gray-800 rounded"
         style={{ height: '300px', backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Glycemic index distribution beeswarm plot"
       />
 
       {tooltip && (

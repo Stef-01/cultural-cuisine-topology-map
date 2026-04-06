@@ -536,6 +536,87 @@ export function computeUniversalCompounds() {
     .sort((a, b) => b.count - a.count)
 }
 
+// ─── JACCARD BOOTSTRAP STABILITY ─────────────────────────────
+// Resample compounds with replacement to test robustness of
+// pairwise Jaccard similarities. Reports mean ± SD for each pair.
+export function computeJaccardStability(nBoot = 500) {
+  // Gather compound sets per cuisine
+  const compoundSets = {}
+  cuisineIds.forEach(cid => {
+    compoundSets[cid] = rawData.cuisines[cid].all_compounds
+      || rawData.cuisines[cid].compounds
+      || []
+  })
+
+  // All unique compounds across all cuisines
+  const allCompounds = [...new Set(cuisineIds.flatMap(cid => compoundSets[cid]))]
+  const n = allCompounds.length
+
+  // Seeded PRNG for reproducibility
+  let seed = 7
+  function rand() {
+    seed = (seed * 1664525 + 1013904223) & 0x7fffffff
+    return seed / 0x7fffffff
+  }
+
+  // For each pair, collect bootstrap Jaccard values
+  const pairResults = {}
+  const pairs = []
+  for (let i = 0; i < cuisineIds.length; i++) {
+    for (let j = i + 1; j < cuisineIds.length; j++) {
+      pairs.push([cuisineIds[i], cuisineIds[j]])
+      pairResults[`${cuisineIds[i]}|${cuisineIds[j]}`] = []
+    }
+  }
+
+  for (let b = 0; b < nBoot; b++) {
+    // Bootstrap: resample compounds with replacement
+    const sampledCompounds = Array.from({ length: n }, () =>
+      allCompounds[Math.floor(rand() * n)]
+    )
+    const sampledSet = new Set(sampledCompounds)
+
+    // Recompute compound sets for each cuisine (intersection with bootstrap sample)
+    const bootSets = {}
+    cuisineIds.forEach(cid => {
+      bootSets[cid] = new Set(compoundSets[cid].filter(c => sampledSet.has(c)))
+    })
+
+    // Compute Jaccard for each pair
+    pairs.forEach(([c1, c2]) => {
+      const s1 = bootSets[c1]
+      const s2 = bootSets[c2]
+      let intersection = 0
+      s1.forEach(c => { if (s2.has(c)) intersection++ })
+      const union = s1.size + s2.size - intersection
+      const jaccard = union > 0 ? intersection / union : 0
+      pairResults[`${c1}|${c2}`].push(jaccard)
+    })
+  }
+
+  // Compute statistics
+  return pairs.map(([c1, c2]) => {
+    const key = `${c1}|${c2}`
+    const values = pairResults[key]
+    const mean = values.reduce((s, v) => s + v, 0) / values.length
+    const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / (values.length - 1)
+    const sd = Math.sqrt(variance)
+    const sorted = [...values].sort((a, b) => a - b)
+    const ci_lo = sorted[Math.floor(values.length * 0.025)]
+    const ci_hi = sorted[Math.floor(values.length * 0.975)]
+    const observed = getJaccard(c1, c2)
+
+    return {
+      c1, c2,
+      observed,
+      bootMean: mean,
+      bootSD: sd,
+      ci95: [ci_lo, ci_hi],
+      stable: Math.abs(observed - mean) < 2 * sd,
+    }
+  }).sort((a, b) => b.observed - a.observed)
+}
+
 // ─── GI=0 PROTEIN FILTER ─────────────────────────────────────
 // 270 meals in the dataset have GI=0 (pure protein: meat, fish, eggs).
 // While technically correct (pure protein has negligible glycemic response),

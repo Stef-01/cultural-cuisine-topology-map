@@ -35,6 +35,7 @@ const EntropyChart = () => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Shannon entropy of compound sharing diversity per cuisine')
 
     const maxEntropy = Math.max(...data.map(d => d.entropy))
 
@@ -131,6 +132,8 @@ const EntropyChart = () => {
         ref={svgRef}
         className="w-full border border-gray-800 rounded"
         style={{ height: '400px', backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Shannon entropy of compound sharing diversity per cuisine"
       />
 
       {tooltip && (

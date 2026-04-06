@@ -31,6 +31,7 @@ const PersistenceDiagram = () => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Persistence diagram from Vietoris-Rips filtration on cuisine Jaccard distances')
 
     const g = svg
       .append('g')
@@ -229,6 +230,8 @@ const PersistenceDiagram = () => {
         height="400"
         className="border border-gray-800 rounded mx-auto"
         style={{ backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Persistence diagram from Vietoris-Rips filtration on cuisine Jaccard distances"
       />
 
       {tooltip && (

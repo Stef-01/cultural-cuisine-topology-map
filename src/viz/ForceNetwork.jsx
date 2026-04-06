@@ -63,6 +63,7 @@ const ForceNetwork = () => {
     // Create SVG
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Cuisine similarity force network — 10 cuisines connected by shared flavor compounds')
 
     // Define filter for glow
     const defs = svg.append('defs')
@@ -302,6 +303,8 @@ const ForceNetwork = () => {
         ref={svgRef}
         className="w-full border border-slate-700 rounded"
         style={{ height: '600px', backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Cuisine similarity force network — 10 cuisines connected by shared flavor compounds"
       />
 
       {/* Molecular Bridge Panel */}

@@ -33,6 +33,7 @@ const HeatmapChart = () => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Jaccard similarity heatmap between all cuisine pairs')
 
     // Color scale - dark theme: dark slate to bright accent
     const colorScale = d3.scaleLinear()
@@ -141,6 +142,8 @@ const HeatmapChart = () => {
         ref={svgRef}
         className="w-full border border-gray-800 rounded"
         style={{ backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Jaccard similarity heatmap between all cuisine pairs"
       />
 
       {tooltip && (

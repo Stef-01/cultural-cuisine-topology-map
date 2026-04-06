@@ -38,6 +38,7 @@ const RadarChart = ({ cuisineId = null, compareIds = null }) => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Flavor compound family fingerprint radar chart')
 
     const angleSlice = (Math.PI * 2) / axes.length
 
@@ -178,10 +179,11 @@ const RadarChart = ({ cuisineId = null, compareIds = null }) => {
     <div className="w-full flex justify-center">
       <svg
         ref={svgRef}
-        width="350"
-        height="350"
-        className="border border-slate-700/50 rounded"
+        viewBox="0 0 350 350"
+        className="border border-slate-700/50 rounded w-full max-w-[350px]"
         style={{ backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Flavor compound family fingerprint radar chart"
       />
 
       {tooltip && (

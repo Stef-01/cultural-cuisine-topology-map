@@ -61,6 +61,7 @@ const TreemapChart = () => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Treemap of flavor compound families across cuisines')
 
     // Create hierarchy
     const root = d3.hierarchy(hierarchyData).sum(d => d.value)
@@ -174,6 +175,8 @@ const TreemapChart = () => {
         ref={svgRef}
         className="w-full border border-gray-800 rounded"
         style={{ height: '400px', backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Treemap of flavor compound families across cuisines"
       />
 
       {tooltip && (

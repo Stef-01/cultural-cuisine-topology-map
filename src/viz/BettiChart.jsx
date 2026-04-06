@@ -34,6 +34,7 @@ const BettiChart = () => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('Betti numbers by filtration threshold for cuisine compound similarity')
 
     const xScale = d3
       .scaleBand()
@@ -150,6 +151,8 @@ const BettiChart = () => {
         ref={svgRef}
         className="w-full border border-gray-800 rounded"
         style={{ height: '300px', backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="Betti numbers by filtration threshold for cuisine compound similarity"
       />
 
       {tooltip && (

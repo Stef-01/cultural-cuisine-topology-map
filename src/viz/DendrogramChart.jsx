@@ -39,6 +39,7 @@ const DendrogramChart = () => {
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
+    svg.append('title').text('UPGMA hierarchical clustering dendrogram of cuisine flavor compound similarity')
 
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`)
@@ -181,6 +182,8 @@ const DendrogramChart = () => {
         ref={svgRef}
         className="w-full border border-gray-800 rounded"
         style={{ height: '400px', backgroundColor: '#0a0a0f' }}
+        role="img"
+        aria-label="UPGMA hierarchical clustering dendrogram of cuisine flavor compound similarity"
       />
 
       {tooltip && (

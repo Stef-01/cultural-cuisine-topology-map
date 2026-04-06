@@ -10,7 +10,7 @@ import HeatmapChart from '../viz/HeatmapChart'
 import BeeswarmChart from '../viz/BeeswarmChart'
 import TreemapChart from '../viz/TreemapChart'
 import DendrogramChart from '../viz/DendrogramChart'
-import { data, sortedPairs, getOverlap, cuisineIds, computeCompoundCuisineMatrix, computeGISensitivity } from '../data/computed'
+import { data, sortedPairs, getOverlap, cuisineIds, computeCompoundCuisineMatrix, computeGISensitivity, computeJaccardStability } from '../data/computed'
 import { CUISINE_COLORS, CUISINE_NAMES } from '../data/constants'
 
 export default function TopologyExplorer() {
@@ -18,6 +18,7 @@ export default function TopologyExplorer() {
 
   const compoundMatrix = useMemo(() => computeCompoundCuisineMatrix(), [])
   const giSensitivity = useMemo(() => computeGISensitivity(), [])
+  const jaccardStability = useMemo(() => computeJaccardStability(500), [])
 
   const tabs = [
     { id: 'network', label: 'Interactive Network' },
@@ -236,6 +237,50 @@ export default function TopologyExplorer() {
                         {row.avgGI_measuredOnly != null ? row.avgGI_measuredOnly.toFixed(1) : 'N/A'}
                       </td>
                       <td className="text-center py-2 px-2 text-slate-300">{row.delta}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Jaccard Bootstrap Stability */}
+            <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4 text-[#d4a574]">Jaccard Bootstrap Stability</h3>
+              <p className="text-xs text-slate-400 mb-4">
+                500-iteration bootstrap resampling of compounds to test robustness of pairwise Jaccard similarities.
+                Stable pairs (observed within 2 SD of bootstrap mean) are highlighted. Seeded PRNG for reproducibility.
+              </p>
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-slate-700/50">
+                    <th className="text-left py-2 px-2 text-slate-300">Pair</th>
+                    <th className="text-center py-2 px-2 text-slate-300">Observed</th>
+                    <th className="text-center py-2 px-2 text-slate-300">Boot Mean</th>
+                    <th className="text-center py-2 px-2 text-slate-300">&plusmn; SD</th>
+                    <th className="text-center py-2 px-2 text-slate-300">95% CI</th>
+                    <th className="text-center py-2 px-2 text-slate-300">Stable</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jaccardStability.slice(0, 15).map(row => (
+                    <tr key={`${row.c1}|${row.c2}`} className="border-b border-slate-700/30 hover:bg-slate-800/30">
+                      <td className="py-2 px-2 text-slate-200 text-xs">
+                        <span style={{ color: CUISINE_COLORS[row.c1] }}>{CUISINE_NAMES[row.c1]}</span>
+                        {' '}&harr;{' '}
+                        <span style={{ color: CUISINE_COLORS[row.c2] }}>{CUISINE_NAMES[row.c2]}</span>
+                      </td>
+                      <td className="text-center py-2 px-2 text-slate-300">{(row.observed * 100).toFixed(1)}%</td>
+                      <td className="text-center py-2 px-2 text-slate-300">{(row.bootMean * 100).toFixed(1)}%</td>
+                      <td className="text-center py-2 px-2 text-slate-400">&plusmn;{(row.bootSD * 100).toFixed(1)}</td>
+                      <td className="text-center py-2 px-2 text-slate-400 text-xs">
+                        [{(row.ci95[0] * 100).toFixed(1)}, {(row.ci95[1] * 100).toFixed(1)}]
+                      </td>
+                      <td className="text-center py-2 px-2">
+                        {row.stable
+                          ? <span className="text-green-400 text-xs font-semibold">Yes</span>
+                          : <span className="text-red-400 text-xs font-semibold">No</span>
+                        }
+                      </td>
                     </tr>
                   ))}
                 </tbody>

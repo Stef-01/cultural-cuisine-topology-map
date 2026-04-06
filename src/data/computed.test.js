@@ -14,6 +14,7 @@ import {
   computeDendrogram,
   computeCompoundCuisineMatrix,
   computeGISensitivity,
+  computeJaccardStability,
   isGIZeroProtein,
   filterGIZeroProtein,
   cuisineSummaries,
@@ -342,6 +343,45 @@ describe('GI=0 protein filter', () => {
     })
     // The validation script found 270 GI=0 proteins
     expect(gi0ProteinCount).toBeGreaterThan(200)
+  })
+})
+
+describe('Jaccard bootstrap stability', () => {
+  it('returns 45 pair results', () => {
+    const result = computeJaccardStability(100) // fewer iterations for speed
+    expect(result).toHaveLength(45)
+  })
+
+  it('each result has required fields', () => {
+    const result = computeJaccardStability(50)
+    result.forEach(r => {
+      expect(r).toHaveProperty('c1')
+      expect(r).toHaveProperty('c2')
+      expect(r).toHaveProperty('observed')
+      expect(r).toHaveProperty('bootMean')
+      expect(r).toHaveProperty('bootSD')
+      expect(r).toHaveProperty('ci95')
+      expect(r).toHaveProperty('stable')
+      expect(r.ci95).toHaveLength(2)
+      expect(r.ci95[0]).toBeLessThanOrEqual(r.ci95[1])
+    })
+  })
+
+  it('bootstrap means are close to observed values', () => {
+    const result = computeJaccardStability(100)
+    result.forEach(r => {
+      // Mean should be within 0.2 of observed (generous tolerance for small n)
+      expect(Math.abs(r.bootMean - r.observed)).toBeLessThan(0.2)
+    })
+  })
+
+  it('is deterministic (seeded PRNG)', () => {
+    const run1 = computeJaccardStability(50)
+    const run2 = computeJaccardStability(50)
+    run1.forEach((r, i) => {
+      expect(r.bootMean).toBe(run2[i].bootMean)
+      expect(r.bootSD).toBe(run2[i].bootSD)
+    })
   })
 })
 
