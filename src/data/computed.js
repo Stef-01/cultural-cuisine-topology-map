@@ -536,6 +536,97 @@ export function computeUniversalCompounds() {
     .sort((a, b) => b.count - a.count)
 }
 
+// ─── INGREDIENT → COMPOUND → CUISINE FLOW ───────────────────
+// Build data for alluvial/flow diagram showing how ingredients
+// contribute compounds to cuisines.
+// Note: compounds are at cuisine level (all_compounds), not per-meal.
+// We link ingredients to compounds based on co-occurrence within cuisines.
+export function computeIngredientFlow() {
+  const ingredientCuisines = {} // ingredient → Set of cuisines
+  const compoundCuisines = {}   // compound → Set of cuisines
+  const ingredientCompounds = {} // ingredient → Set of compounds (via cuisine co-occurrence)
+
+  cuisineIds.forEach(cid => {
+    const cuisine = rawData.cuisines[cid]
+    const cuisineCompounds = cuisine.all_compounds || cuisine.compounds || []
+    const cuisineIngredients = new Set()
+
+    // Gather all ingredients used in this cuisine
+    const meals = cuisine.meals || []
+    meals.forEach(meal => {
+      (meal.ingredients || []).forEach(ing => {
+        cuisineIngredients.add(ing)
+        if (!ingredientCuisines[ing]) ingredientCuisines[ing] = new Set()
+        ingredientCuisines[ing].add(cid)
+      })
+    })
+
+    // Track compound → cuisine mapping
+    cuisineCompounds.forEach(c => {
+      if (!compoundCuisines[c]) compoundCuisines[c] = new Set()
+      compoundCuisines[c].add(cid)
+    })
+
+    // Link ingredients to compounds within this cuisine
+    cuisineIngredients.forEach(ing => {
+      if (!ingredientCompounds[ing]) ingredientCompounds[ing] = new Set()
+      cuisineCompounds.forEach(c => ingredientCompounds[ing].add(c))
+    })
+  })
+
+  // Build nodes: top ingredients (by cuisine count), key compounds, cuisines
+  const topIngredients = Object.entries(ingredientCuisines)
+    .map(([name, cuisines]) => ({
+      name,
+      cuisineCount: cuisines.size,
+      compoundCount: ingredientCompounds[name]?.size || 0,
+    }))
+    .sort((a, b) => b.cuisineCount - a.cuisineCount)
+    .slice(0, 20)
+
+  // Get most cross-cuisine compounds (not just highest count)
+  const topCompounds = Object.entries(compoundCuisines)
+    .map(([name, cuisines]) => ({
+      name,
+      cuisineCount: cuisines.size,
+    }))
+    .sort((a, b) => b.cuisineCount - a.cuisineCount)
+    .slice(0, 25)
+
+  const topCompoundNames = new Set(topCompounds.map(c => c.name))
+
+  // Build links: ingredient → compound (only for top compounds)
+  const ingToComp = []
+  topIngredients.forEach(ing => {
+    const comps = ingredientCompounds[ing.name] || new Set()
+    comps.forEach(c => {
+      if (topCompoundNames.has(c)) {
+        ingToComp.push({ source: ing.name, target: c, value: 1 })
+      }
+    })
+  })
+
+  // Build links: compound → cuisine
+  const compToCuisine = []
+  topCompounds.forEach(comp => {
+    const cuisines = compoundCuisines[comp.name] || new Set()
+    cuisines.forEach(cid => {
+      compToCuisine.push({ source: comp.name, target: cid, value: 1 })
+    })
+  })
+
+  return {
+    ingredients: topIngredients,
+    compounds: topCompounds,
+    cuisines: cuisineIds.map(id => ({ id, name: CUISINE_NAMES[id] })),
+    links: { ingToComp, compToCuisine },
+    totals: {
+      ingredients: Object.keys(ingredientCuisines).length,
+      compounds: Object.keys(compoundCuisines).length,
+    },
+  }
+}
+
 // ─── JACCARD BOOTSTRAP STABILITY ─────────────────────────────
 // Resample compounds with replacement to test robustness of
 // pairwise Jaccard similarities. Reports mean ± SD for each pair.

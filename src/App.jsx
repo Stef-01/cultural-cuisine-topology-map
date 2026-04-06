@@ -10,6 +10,7 @@ const Globe = lazy(() => import('./sections/Globe'))
 const TopologyExplorer = lazy(() => import('./sections/TopologyExplorer'))
 const CompoundDive = lazy(() => import('./sections/CompoundDive'))
 const ClinicalTool = lazy(() => import('./sections/ClinicalTool'))
+const PlatePlanner = lazy(() => import('./sections/PlatePlanner'))
 const Moat = lazy(() => import('./sections/Moat'))
 const KeyFindings = lazy(() => import('./sections/KeyFindings'))
 const Methodology = lazy(() => import('./sections/Methodology'))
@@ -53,6 +54,12 @@ export default function App() {
       <ErrorBoundary label="Clinical Tool">
         <Suspense fallback={<SectionLoader label="Clinical Tool" />}>
           <ClinicalTool />
+        </Suspense>
+      </ErrorBoundary>
+
+      <ErrorBoundary label="Build Your Plate">
+        <Suspense fallback={<SectionLoader label="Build Your Plate" />}>
+          <PlatePlanner />
         </Suspense>
       </ErrorBoundary>
 

@@ -15,6 +15,7 @@ import {
   computeCompoundCuisineMatrix,
   computeGISensitivity,
   computeJaccardStability,
+  computeIngredientFlow,
   isGIZeroProtein,
   filterGIZeroProtein,
   cuisineSummaries,
@@ -343,6 +344,39 @@ describe('GI=0 protein filter', () => {
     })
     // The validation script found 270 GI=0 proteins
     expect(gi0ProteinCount).toBeGreaterThan(200)
+  })
+})
+
+describe('Ingredient flow data', () => {
+  it('returns ingredients, compounds, cuisines, and links', () => {
+    const flow = computeIngredientFlow()
+    expect(flow.ingredients.length).toBeGreaterThan(0)
+    expect(flow.ingredients.length).toBeLessThanOrEqual(20)
+    expect(flow.compounds.length).toBeGreaterThan(0)
+    expect(flow.compounds.length).toBeLessThanOrEqual(25)
+    expect(flow.cuisines).toHaveLength(10)
+  })
+
+  it('has valid links connecting all three layers', () => {
+    const flow = computeIngredientFlow()
+    expect(flow.links.ingToComp.length).toBeGreaterThan(0)
+    expect(flow.links.compToCuisine.length).toBeGreaterThan(0)
+
+    // All link sources should exist in the ingredient or compound lists
+    const ingNames = new Set(flow.ingredients.map(i => i.name))
+    const compNames = new Set(flow.compounds.map(c => c.name))
+
+    flow.links.ingToComp.forEach(link => {
+      expect(ingNames.has(link.source)).toBe(true)
+      expect(compNames.has(link.target)).toBe(true)
+    })
+  })
+
+  it('ingredients sorted by cuisine count descending', () => {
+    const flow = computeIngredientFlow()
+    for (let i = 1; i < flow.ingredients.length; i++) {
+      expect(flow.ingredients[i - 1].cuisineCount).toBeGreaterThanOrEqual(flow.ingredients[i].cuisineCount)
+    }
   })
 })
 

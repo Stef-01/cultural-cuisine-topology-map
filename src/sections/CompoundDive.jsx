@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react'
 import ScrollSection from '../components/ScrollSection'
+import InfoOverlay from '../components/InfoOverlay'
 import RadarChart from '../viz/RadarChart'
+import FlowChart from '../viz/FlowChart'
 import { data, computeFlavorFingerprints, computeUniversalCompounds } from '../data/computed'
 import { CUISINE_NAMES, CUISINE_COLORS, COMPOUND_FAMILIES } from '../data/constants'
 import useStore from '../store'
@@ -82,6 +84,21 @@ export default function CompoundDive() {
 
   return (
     <ScrollSection id="compounds" title="Compound Deep Dive">
+      {/* Ingredient → Compound → Cuisine Flow */}
+      <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-6 mb-8 relative">
+        <InfoOverlay title="How to Read the Flow Diagram">
+          <p><strong>Left column:</strong> Top 20 ingredients (by how many cuisines use them). These are the building blocks of flavor.</p>
+          <p><strong>Middle column:</strong> Top 25 flavor compounds. Size reflects how many cuisines contain that compound.</p>
+          <p><strong>Right column:</strong> The 10 cuisines, colored by their identity.</p>
+          <p><strong>Hover</strong> any node to trace its connections — see which ingredients produce which compounds, and which cuisines they flow into.</p>
+        </InfoOverlay>
+        <h3 className="text-lg font-semibold mb-2 text-[#d4a574]">Ingredient &rarr; Compound &rarr; Cuisine Flow</h3>
+        <p className="text-xs text-slate-400 mb-4">
+          Trace how raw ingredients contribute flavor compounds to world cuisines. Hover to highlight pathways.
+        </p>
+        <FlowChart />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Search and Results */}
         <div className="col-span-1 bg-slate-900/50 border border-slate-700/50 rounded-lg p-6 h-fit max-h-[500px] overflow-y-auto">

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
-import { getJaccard, getOverlap, cuisineIds } from '../data/computed'
+import { getJaccard, getOverlap, cuisineIds, computeDendrogram } from '../data/computed'
 import { CUISINE_COLORS, CUISINE_NAMES } from '../data/constants'
 import useStore from '../store'
 
@@ -27,8 +27,16 @@ const HeatmapChart = () => {
   useEffect(() => {
     if (!svgRef.current || !dimensions.width) return
 
+    // Use dendrogram leaf order for optimal clustering layout
+    const { tree } = computeDendrogram()
+    function getLeafOrder(node) {
+      if (node.isLeaf) return [node.id]
+      return [...getLeafOrder(node.children[0]), ...getLeafOrder(node.children[1])]
+    }
+    const orderedIds = getLeafOrder(tree)
+
     const size = dimensions.width
-    const cellSize = size / cuisineIds.length
+    const cellSize = size / orderedIds.length
     const margin = 80
 
     const svg = d3.select(svgRef.current)
@@ -45,7 +53,7 @@ const HeatmapChart = () => {
       .append('g')
       .attr('transform', `translate(${margin}, 0)`)
       .selectAll('text')
-      .data(cuisineIds)
+      .data(orderedIds)
       .join('text')
       .attr('x', (d, i) => i * cellSize + cellSize / 2)
       .attr('y', -10)
@@ -60,7 +68,7 @@ const HeatmapChart = () => {
       .append('g')
       .attr('transform', `translate(0, ${margin})`)
       .selectAll('text')
-      .data(cuisineIds)
+      .data(orderedIds)
       .join('text')
       .attr('x', -10)
       .attr('y', (d, i) => i * cellSize + cellSize / 2 + 4)
@@ -72,10 +80,10 @@ const HeatmapChart = () => {
 
     // Heatmap cells
     const cells = []
-    for (let i = 0; i < cuisineIds.length; i++) {
-      for (let j = 0; j < cuisineIds.length; j++) {
-        const c1 = cuisineIds[i]
-        const c2 = cuisineIds[j]
+    for (let i = 0; i < orderedIds.length; i++) {
+      for (let j = 0; j < orderedIds.length; j++) {
+        const c1 = orderedIds[i]
+        const c2 = orderedIds[j]
         const jaccard = getJaccard(c1, c2)
         const overlap = getOverlap(c1, c2)
         cells.push({
