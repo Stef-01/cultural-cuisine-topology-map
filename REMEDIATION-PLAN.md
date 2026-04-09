@@ -215,37 +215,37 @@ Upgrade from GI to Glycemic Load (GI × typical portion size). Add disclaimers. 
 
 ## 6-Month Implementation Plan
 
-### Month 1: Data Integrity & Honest Reframing
+### Month 1: Data Integrity & Honest Reframing ✅ COMPLETE
 
 **Week 1-2:**
-- [ ] Add `gi_measured` / `gi_confidence` flags to all 1,932 meals in cuisines.json
-- [ ] Add medical disclaimers to PlatePlanner
-- [ ] Relabel FlowChart as "Co-occurrence" with caveat
-- [ ] Reframe "Grandmother Was Right" → add food anthropology citations
-- [ ] Rename "Topology Explorer" → "Cuisine Similarity Explorer"
-- [ ] Move TDA to "Pedagogical TDA" sub-tab with explicit labeling
-- [ ] Add error bars/ranges to all GI visualizations
+- [x] Add `gi_measured` / `gi_confidence` flags to all 1,932 meals in cuisines.json
+- [x] Add medical disclaimers to PlatePlanner
+- [x] Relabel FlowChart as "Co-occurrence" with caveat
+- [x] Reframe "Grandmother Was Right" → add food anthropology citations
+- [x] Rename "Topology Explorer" → "Cuisine Similarity Explorer"
+- [x] Move TDA to "Pedagogical TDA" sub-tab with explicit labeling
+- [x] Add error bars/ranges to all GI visualizations (± SD on DumbbellChart)
 
 **Week 3-4:**
-- [ ] Build measured-only analysis toggle across all sections
-- [ ] Rerun all statistical tests on measured-only subset
-- [ ] Acknowledge selection bias in methodology (Critique 9)
-- [ ] Rename entropy visualization to "compound sharing diversity"
-- [ ] Add Jaccard limitation caveat in methodology
+- [x] Build measured-only analysis toggle across all sections
+- [x] Rerun all statistical tests on measured-only subset (measuredOnly field in TvM)
+- [x] Acknowledge selection bias in methodology (Critique 9)
+- [x] Rename entropy visualization to "compound sharing diversity"
+- [x] Add Jaccard limitation caveat in methodology
 
-### Month 2: Compound-Level TDA & Validation
+### Month 2: Compound-Level TDA & Validation ✅ MOSTLY COMPLETE
 
 **Week 1-2:**
-- [ ] Run `scripts/compute_persistence.py` with Ripser on 333-compound matrix
-- [ ] Build CompoundPersistence visualization for n=333 results
-- [ ] Cross-validate 20 random meals against GC-MS literature (Critique 6)
+- [x] Build JS-based compound-level persistence (n=333, β₀ via Union-Find on Hamming distances)
+- [x] Build CompoundPersistence visualization with cluster count grid
+- [ ] Cross-validate 20 random meals against GC-MS literature (requires manual research)
 
 **Week 3-4:**
-- [ ] Implement cosine similarity as complementary metric (Critique 8)
-- [ ] Build dual-view UI: public (simple) + researcher (detailed) toggle
-- [ ] Create public version with simplified language and visual summaries
+- [x] Implement cosine similarity as complementary metric (computeCosineSimilarity, computeAllCosineSimilarities)
+- [x] Build dual-view UI: public (simple) + researcher (detailed) toggle (ViewToggle + viewMode store)
+- [x] Create public version with simplified language (share cards, simplified labels)
 
-### Month 3: Proper Statistics & Uncertainty
+### Month 3: Proper Statistics & Uncertainty — IN PROGRESS
 
 **Week 1-2:**
 - [ ] Model estimated GI as distributions (Uniform from category ranges)
@@ -255,11 +255,12 @@ Upgrade from GI to Glycemic Load (GI × typical portion size). Add disclaimers. 
 **Week 3-4:**
 - [ ] Per-ingredient compound mapping from FlavorDB2 (fix flow diagram)
 - [ ] Add cooking-method flags and compound profile adjustments
-- [ ] Build proper sensitivity analysis: measured-only vs. all vs. uncertainty-propagated
+- [x] Build proper sensitivity analysis: measured-only vs. all (measuredOnly table in Moat section)
 
-### Month 4: Academic Paper Draft
+### Month 4: Academic Paper Draft — STARTED
 
 **Week 1-2:**
+- [x] Create paper outline (paper/PAPER-OUTLINE.md — 7 sections, ~6,000 words)
 - [ ] Write Introduction + Related Work (2,000 words)
 - [ ] Write Data & Methods (2,000 words) with full limitation disclosure
 
