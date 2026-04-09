@@ -455,6 +455,10 @@ export function computeTraditionalVsModern() {
     const tradGI = trad.map(m => m.gi)
     const modGI = mod.map(m => m.gi)
 
+    // Measured-only subset for sensitivity
+    const tradMeasured = trad.filter(m => m.gi_confidence === 'measured').map(m => m.gi)
+    const modMeasured = mod.filter(m => m.gi_confidence === 'measured').map(m => m.gi)
+
     const avg = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0
     const sd = arr => {
       if (arr.length < 2) return 0
@@ -508,6 +512,12 @@ export function computeTraditionalVsModern() {
         stars,
         bonferroniAlpha: BONFERRONI_ALPHA,
       },
+      measuredOnly: {
+        traditional: { count: tradMeasured.length, avgGI: avg(tradMeasured) },
+        modern: { count: modMeasured.length, avgGI: avg(modMeasured) },
+        gap: tradMeasured.length && modMeasured.length ? avg(modMeasured) - avg(tradMeasured) : null,
+        totalMeasured: tradMeasured.length + modMeasured.length,
+      },
     }
   })
 
@@ -534,6 +544,43 @@ export function computeUniversalCompounds() {
       return { compound, count, family }
     })
     .sort((a, b) => b.count - a.count)
+}
+
+// ─── COSINE SIMILARITY ───────────────────────────────────────
+// Complementary to Jaccard: treats cuisine compound profiles as
+// binary vectors and computes cosine of the angle between them.
+// Unlike Jaccard, cosine is less sensitive to set size differences.
+export function computeCosineSimilarity(a, b) {
+  const compsA = rawData.cuisines[a]?.all_compounds || []
+  const compsB = rawData.cuisines[b]?.all_compounds || []
+  const allComps = new Set([...compsA, ...compsB])
+
+  let dotProduct = 0, magA = 0, magB = 0
+  allComps.forEach(c => {
+    const inA = compsA.includes(c) ? 1 : 0
+    const inB = compsB.includes(c) ? 1 : 0
+    dotProduct += inA * inB
+    magA += inA * inA
+    magB += inB * inB
+  })
+
+  const magnitude = Math.sqrt(magA) * Math.sqrt(magB)
+  return magnitude > 0 ? dotProduct / magnitude : 0
+}
+
+export function computeAllCosineSimilarities() {
+  const results = []
+  for (let i = 0; i < cuisineIds.length; i++) {
+    for (let j = i + 1; j < cuisineIds.length; j++) {
+      results.push({
+        c1: cuisineIds[i],
+        c2: cuisineIds[j],
+        cosine: computeCosineSimilarity(cuisineIds[i], cuisineIds[j]),
+        jaccard: getJaccard(cuisineIds[i], cuisineIds[j]),
+      })
+    }
+  }
+  return results.sort((a, b) => b.cosine - a.cosine)
 }
 
 // ─── INGREDIENT → COMPOUND → CUISINE FLOW ───────────────────
@@ -706,6 +753,18 @@ export function computeJaccardStability(nBoot = 500) {
       stable: Math.abs(observed - mean) < 2 * sd,
     }
   }).sort((a, b) => b.observed - a.observed)
+}
+
+// ─── GI CONFIDENCE UTILITIES ─────────────────────────────────
+// Every meal now has gi_confidence: 'measured' | 'estimated' | 'protein_zero'
+// Use these to filter analyses to measured-only subsets.
+
+export function isMeasuredGI(meal) {
+  return meal.gi_confidence === 'measured'
+}
+
+export function isEstimatedGI(meal) {
+  return meal.gi_confidence === 'estimated'
 }
 
 // ─── GI=0 PROTEIN FILTER ─────────────────────────────────────

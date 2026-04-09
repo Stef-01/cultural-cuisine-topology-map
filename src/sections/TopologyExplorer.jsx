@@ -21,13 +21,13 @@ export default function TopologyExplorer() {
   const jaccardStability = useMemo(() => computeJaccardStability(500), [])
 
   const tabs = [
-    { id: 'network', label: 'Interactive Network' },
-    { id: 'public', label: 'Public-Facing' },
+    { id: 'network', label: 'Similarity Network' },
+    { id: 'public', label: 'Clustering & Structure' },
     { id: 'technical', label: 'Technical / Publication' }
   ]
 
   return (
-    <ScrollSection id="topology" title="Topology Explorer">
+    <ScrollSection id="topology" title="Cuisine Similarity Explorer">
       <TabPanel tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
         {/* Network Tab */}
         {activeTab === 'network' && (

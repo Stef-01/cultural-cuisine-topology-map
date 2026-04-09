@@ -275,7 +275,7 @@ export default function PlatePlanner() {
                   </div>
                 </div>
 
-                {/* GI recommendation */}
+                {/* GI observation (NOT medical advice) */}
                 <div className={`text-xs rounded-lg p-3 ${
                   plateStats.avgGI < 45
                     ? 'bg-green-900/20 border border-green-800/30 text-green-300'
@@ -284,11 +284,23 @@ export default function PlatePlanner() {
                     : 'bg-red-900/20 border border-red-800/30 text-red-300'
                 }`}>
                   {plateStats.avgGI < 45
-                    ? 'Excellent! This plate has a low glycemic impact — great for steady energy and blood sugar management.'
+                    ? 'This plate features mostly low-GI traditional foods. These tend to provide sustained energy release.'
                     : plateStats.avgGI < 60
-                    ? 'Moderate glycemic impact. Consider swapping a refined grain or dessert for a legume or vegetable dish.'
-                    : 'High glycemic impact. Try replacing refined grains and sugary items with traditional whole-food alternatives from this cuisine.'
+                    ? 'Moderate average GI. Swapping a refined grain for a legume or vegetable dish would lower the overall GI.'
+                    : 'Higher average GI, driven by refined grains or sugar-dense items. Traditional whole-food alternatives from this cuisine would lower it.'
                   }
+                </div>
+
+                {/* Medical disclaimer */}
+                <div className="text-xs text-slate-600 bg-slate-800/30 rounded p-2 mt-2 border border-slate-700/30">
+                  <strong className="text-slate-500">Educational tool only.</strong> GI is a population average that
+                  does not account for portion size, food combining, cooking method, or individual metabolism.
+                  {plateStats.mealCount > 0 && (
+                    <span className="text-amber-600 ml-1">
+                      Note: most GI values in this dataset are category-based estimates, not laboratory measurements.
+                    </span>
+                  )}
+                  {' '}Consult a registered dietitian for personalized nutrition guidance.
                 </div>
               </div>
             )}

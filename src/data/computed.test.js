@@ -16,6 +16,9 @@ import {
   computeGISensitivity,
   computeJaccardStability,
   computeIngredientFlow,
+  computeCosineSimilarity,
+  computeAllCosineSimilarities,
+  isMeasuredGI,
   isGIZeroProtein,
   filterGIZeroProtein,
   cuisineSummaries,
@@ -344,6 +347,57 @@ describe('GI=0 protein filter', () => {
     })
     // The validation script found 270 GI=0 proteins
     expect(gi0ProteinCount).toBeGreaterThan(200)
+  })
+})
+
+describe('Cosine similarity', () => {
+  it('returns value between 0 and 1', () => {
+    const cos = computeCosineSimilarity('indian', 'thai')
+    expect(cos).toBeGreaterThan(0)
+    expect(cos).toBeLessThanOrEqual(1)
+  })
+
+  it('is symmetric', () => {
+    expect(computeCosineSimilarity('indian', 'japanese')).toBe(computeCosineSimilarity('japanese', 'indian'))
+  })
+
+  it('computeAllCosineSimilarities returns 45 pairs sorted descending', () => {
+    const all = computeAllCosineSimilarities()
+    expect(all).toHaveLength(45)
+    for (let i = 1; i < all.length; i++) {
+      expect(all[i - 1].cosine).toBeGreaterThanOrEqual(all[i].cosine)
+    }
+  })
+
+  it('cosine and jaccard are correlated (both measure similarity)', () => {
+    const all = computeAllCosineSimilarities()
+    // Top cosine pair should also be in top 5 Jaccard pairs
+    const topCosine = all[0]
+    const topJaccardPairs = sortedPairs.slice(0, 5).map(p => `${p.c1}|${p.c2}`)
+    const cosineKey1 = `${topCosine.c1}|${topCosine.c2}`
+    const cosineKey2 = `${topCosine.c2}|${topCosine.c1}`
+    const found = topJaccardPairs.includes(cosineKey1) || topJaccardPairs.includes(cosineKey2)
+    expect(found, 'Top cosine pair should be in top 5 Jaccard pairs').toBe(true)
+  })
+})
+
+describe('Measured-only analysis in traditional vs modern', () => {
+  it('each cuisine has measuredOnly subset', () => {
+    const tvm = computeTraditionalVsModern()
+    tvm.forEach(r => {
+      expect(r.measuredOnly).toBeDefined()
+      expect(r.measuredOnly.traditional).toBeDefined()
+      expect(r.measuredOnly.modern).toBeDefined()
+      expect(r.measuredOnly.totalMeasured).toBeDefined()
+    })
+  })
+
+  it('measured counts are less than or equal to total counts', () => {
+    const tvm = computeTraditionalVsModern()
+    tvm.forEach(r => {
+      expect(r.measuredOnly.traditional.count).toBeLessThanOrEqual(r.traditional.count)
+      expect(r.measuredOnly.modern.count).toBeLessThanOrEqual(r.modern.count)
+    })
   })
 })
 

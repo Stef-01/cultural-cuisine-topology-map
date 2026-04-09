@@ -187,18 +187,37 @@ export default function Methodology() {
         </div>
       </div>
 
-      {/* Limitations */}
+      {/* Limitations — expanded and honest */}
+      <div className="bg-red-900/10 border-l-4 border-red-500 rounded-lg p-6 mb-8">
+        <h3 className="font-semibold text-red-300 mb-3">Critical Limitations</h3>
+        <ul className="text-sm text-red-200/80 space-y-2">
+          <li>&bull; <strong>83% of GI values are estimates.</strong> Only 55 meals (2.8%) have laboratory-measured GI from
+          published sources. 1,607 (83.2%) use category-based heuristics. 270 (14%) are GI=0 protein assignments.
+          All GI-based conclusions should be treated as hypothesis-generating, not confirmatory.</li>
+          <li>&bull; <strong>The traditional/modern GI gap is expected from food science,</strong> not a novel discovery.
+          Whole foods have lower GI than processed foods by definition. The novelty is mapping this across 10 diverse cuisines, not the finding itself.</li>
+          <li>&bull; <strong>Jaccard similarity treats compounds as binary</strong> (present/absent) without concentration,
+          abundance, or sensory threshold data. A trace compound and a dominant compound receive equal weight.
+          Cosine similarity is provided as a complementary metric.</li>
+        </ul>
+      </div>
+
       <div className="bg-amber-900/20 border-l-4 border-amber-500 rounded-lg p-6 mb-8">
-        <h3 className="font-semibold text-amber-300 mb-3">Limitations & Disclaimers</h3>
+        <h3 className="font-semibold text-amber-300 mb-3">Additional Limitations</h3>
         <ul className="text-sm text-amber-200/90 space-y-2">
-          <li>&bull; Glycemic Index values are measured under controlled laboratory conditions and may vary by individual factors, food preparation, and ripeness.</li>
-          <li>&bull; A portion of GI values are category-based estimates (flagged with &ldquo;est.&rdquo;), not direct measurements. Conclusions should be verified against measured-only subsets.</li>
-          <li>&bull; Compound extraction is based on published flavor chemistry literature; not all flavor constituents may be captured, and cooking methods alter compound profiles significantly.</li>
-          <li>&bull; The traditional/modern binary is a simplification. Some traditional cuisines include deep-fried and sweet preparations; the classification reflects dominant patterns, not absolutes.</li>
-          <li>&bull; Cuisine categorization reflects culinary traditions; boundaries are not strict and overlap is expected. Regional variation within cuisines is not captured.</li>
-          <li>&bull; Topological data analysis on n=10 cuisines is pedagogically useful but too small for deep topological inference. Compound-level TDA (n=333) is recommended for publication.</li>
-          <li>&bull; This analysis is for educational purposes and should not replace medical advice from healthcare professionals.</li>
-          <li>&bull; Individual responses to foods vary; consult a registered dietitian for personalized guidance.</li>
+          <li>&bull; <strong>Cuisine selection bias:</strong> 10 cuisines were hand-selected for diversity and GI data availability.
+          Missing: Chinese (1.4B people), Indonesian, Brazilian, Turkish, French, Nigerian (distinct from West African).
+          Results may not generalize to unrepresented culinary traditions.</li>
+          <li>&bull; Compound data is from published flavor chemistry databases (FlavorDB2, FooDB, Ahn et al.);
+          not all constituents are captured. Cooking methods (Maillard reaction, thermal degradation, fermentation)
+          alter compound profiles significantly but are not modeled.</li>
+          <li>&bull; The ingredient&ndash;compound co-occurrence diagram shows statistical association, not biochemical causation.
+          An ingredient linked to a compound means they appear in the same cuisine, not that the ingredient produces that compound.</li>
+          <li>&bull; Topological data analysis on n=10 cuisines is <strong>pedagogically illustrative only</strong>.
+          With 10 points, the Rips complex is too small for meaningful topological features.
+          The dendrogram (UPGMA) is the primary analytical visualization for cuisine-level structure.</li>
+          <li>&bull; This is an <strong>educational tool, not medical advice</strong>. GI does not account for portion size,
+          food combining, cooking method, or individual insulin sensitivity. Consult a registered dietitian.</li>
         </ul>
       </div>
 

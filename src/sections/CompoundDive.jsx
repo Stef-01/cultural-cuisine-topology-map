@@ -86,15 +86,19 @@ export default function CompoundDive() {
     <ScrollSection id="compounds" title="Compound Deep Dive">
       {/* Ingredient → Compound → Cuisine Flow */}
       <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-6 mb-8 relative">
-        <InfoOverlay title="How to Read the Flow Diagram">
-          <p><strong>Left column:</strong> Top 20 ingredients (by how many cuisines use them). These are the building blocks of flavor.</p>
+        <InfoOverlay title="How to Read the Co-occurrence Diagram">
+          <p><strong>Left column:</strong> Top 20 ingredients (by how many cuisines use them).</p>
           <p><strong>Middle column:</strong> Top 25 flavor compounds. Size reflects how many cuisines contain that compound.</p>
           <p><strong>Right column:</strong> The 10 cuisines, colored by their identity.</p>
-          <p><strong>Hover</strong> any node to trace its connections — see which ingredients produce which compounds, and which cuisines they flow into.</p>
+          <p><strong>Hover</strong> any node to trace its co-occurrence patterns across cuisines.</p>
+          <p className="text-amber-400 mt-1"><strong>Important:</strong> Links show co-occurrence within cuisines, not biochemical
+          contribution. An ingredient being linked to a compound means they appear in the same cuisine, not that the ingredient
+          produces that compound. For actual ingredient&rarr;compound biochemistry, consult FlavorDB2.</p>
         </InfoOverlay>
-        <h3 className="text-lg font-semibold mb-2 text-[#d4a574]">Ingredient &rarr; Compound &rarr; Cuisine Flow</h3>
+        <h3 className="text-lg font-semibold mb-2 text-[#d4a574]">Ingredient &ndash; Compound &ndash; Cuisine Co-occurrence</h3>
         <p className="text-xs text-slate-400 mb-4">
-          Trace how raw ingredients contribute flavor compounds to world cuisines. Hover to highlight pathways.
+          How ingredients, compounds, and cuisines co-occur in the dataset. Links show statistical association, not biochemical causation.
+          Hover to highlight patterns.
         </p>
         <FlowChart />
       </div>

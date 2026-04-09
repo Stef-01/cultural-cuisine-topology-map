@@ -353,6 +353,47 @@ describe('Random spot checks on specific meals', () => {
 // SECTION 8: No Hardcoded Fake Content
 // ═══════════════════════════════════════════════════════════════
 
+describe('gi_confidence field integrity', () => {
+  it('every meal has gi_confidence field', () => {
+    Object.entries(rawData.cuisines).forEach(([cid, cuisine]) => {
+      cuisine.meals.forEach(meal => {
+        expect(meal.gi_confidence, `${cid} ${meal.name} missing gi_confidence`).toBeDefined()
+        expect(['measured', 'estimated', 'protein_zero']).toContain(meal.gi_confidence)
+      })
+    })
+  })
+
+  it('gi_confidence=measured meals have non-est gi_ref', () => {
+    Object.values(rawData.cuisines).forEach(cuisine => {
+      cuisine.meals.filter(m => m.gi_confidence === 'measured').forEach(meal => {
+        expect(meal.gi_ref).not.toContain('est.')
+      })
+    })
+  })
+
+  it('gi_confidence=protein_zero meals have gi=0', () => {
+    Object.values(rawData.cuisines).forEach(cuisine => {
+      cuisine.meals.filter(m => m.gi_confidence === 'protein_zero').forEach(meal => {
+        expect(meal.gi).toBe(0)
+      })
+    })
+  })
+
+  it('counts match expected totals (55 measured, 1607 estimated, 270 protein_zero)', () => {
+    let measured = 0, estimated = 0, proteinZero = 0
+    Object.values(rawData.cuisines).forEach(cuisine => {
+      cuisine.meals.forEach(m => {
+        if (m.gi_confidence === 'measured') measured++
+        else if (m.gi_confidence === 'estimated') estimated++
+        else if (m.gi_confidence === 'protein_zero') proteinZero++
+      })
+    })
+    expect(measured).toBe(55)
+    expect(estimated).toBe(1607)
+    expect(proteinZero).toBe(270)
+  })
+})
+
 describe('No hardcoded fake content', () => {
   it('cuisine NAMES map to real countries/regions', () => {
     const expected = ['Indian', 'Mexican', 'Japanese', 'Mediterranean', 'Ethiopian',
