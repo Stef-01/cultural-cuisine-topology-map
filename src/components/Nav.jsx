@@ -1,4 +1,5 @@
 import useScrollProgress from '../hooks/useScrollProgress';
+import ViewToggle from './ViewToggle';
 
 const SECTIONS = [
   { id: 'hero', label: 'Hero' },
@@ -94,8 +95,9 @@ const Nav = () => {
             ))}
           </div>
 
-          {/* Right: Buttons */}
-          <div className="flex-1 flex justify-end gap-2 sm:gap-3">
+          {/* Right: Toggle + Buttons */}
+          <div className="flex-1 flex justify-end items-center gap-2 sm:gap-3">
+            <ViewToggle />
             <button
               onClick={() => handleScroll('topology')}
               className="px-3 py-1.5 rounded text-xs font-medium transition-all duration-300"

@@ -18,6 +18,7 @@ import {
   computeIngredientFlow,
   computeCosineSimilarity,
   computeAllCosineSimilarities,
+  computeCompoundPersistence,
   isMeasuredGI,
   isGIZeroProtein,
   filterGIZeroProtein,
@@ -347,6 +348,39 @@ describe('GI=0 protein filter', () => {
     })
     // The validation script found 270 GI=0 proteins
     expect(gi0ProteinCount).toBeGreaterThan(200)
+  })
+})
+
+describe('Compound-level persistence (n=333)', () => {
+  it('returns persistence for 300+ compounds', () => {
+    const result = computeCompoundPersistence()
+    expect(result.n_compounds).toBeGreaterThan(200)
+    expect(result.beta0Features.length).toBeGreaterThan(100)
+  })
+
+  it('has exactly one infinite feature', () => {
+    const result = computeCompoundPersistence()
+    const infinite = result.beta0Features.filter(f => f.death === Infinity)
+    expect(infinite).toHaveLength(1)
+  })
+
+  it('has n-1 finite features', () => {
+    const result = computeCompoundPersistence()
+    const finite = result.beta0Features.filter(f => f.death !== Infinity)
+    expect(finite).toHaveLength(result.n_compounds - 1)
+  })
+
+  it('cluster counts decrease monotonically', () => {
+    const result = computeCompoundPersistence()
+    for (let i = 1; i < result.clusterCounts.length; i++) {
+      expect(result.clusterCounts[i].clusters).toBeLessThanOrEqual(result.clusterCounts[i - 1].clusters)
+    }
+  })
+
+  it('is deterministic', () => {
+    const r1 = computeCompoundPersistence()
+    const r2 = computeCompoundPersistence()
+    expect(r1.statistics.avgPersistence).toBe(r2.statistics.avgPersistence)
   })
 })
 

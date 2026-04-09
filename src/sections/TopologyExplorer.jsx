@@ -10,11 +10,14 @@ import HeatmapChart from '../viz/HeatmapChart'
 import BeeswarmChart from '../viz/BeeswarmChart'
 import TreemapChart from '../viz/TreemapChart'
 import DendrogramChart from '../viz/DendrogramChart'
+import CompoundPersistence from '../viz/CompoundPersistence'
 import { data, sortedPairs, getOverlap, cuisineIds, computeCompoundCuisineMatrix, computeGISensitivity, computeJaccardStability } from '../data/computed'
 import { CUISINE_COLORS, CUISINE_NAMES } from '../data/constants'
+import useStore from '../store'
 
 export default function TopologyExplorer() {
   const [activeTab, setActiveTab] = useState('network')
+  const viewMode = useStore(s => s.viewMode)
 
   const compoundMatrix = useMemo(() => computeCompoundCuisineMatrix(), [])
   const giSensitivity = useMemo(() => computeGISensitivity(), [])
@@ -59,11 +62,30 @@ export default function TopologyExplorer() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            {/* Compound-Level Persistence — researcher only */}
+            {viewMode === 'researcher' && (
+              <div className="bg-slate-900/50 border border-blue-800/30 rounded-lg shadow p-6 mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded font-semibold">RESEARCHER</span>
+                  <h3 className="text-lg font-semibold text-slate-200">Compound-Level Persistence (n=333)</h3>
+                </div>
+                <p className="text-xs text-slate-400 mb-4">
+                  Vietoris-Rips &beta;&#x2080; persistence on the full compound point cloud (333 compounds in 10-dimensional
+                  binary cuisine-space, Hamming distance). Unlike the n=10 cuisine-level diagram below, this has
+                  sufficient scale for meaningful topological features.
+                </p>
+                <CompoundPersistence />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Pedagogical TDA — labeled honestly */}
               <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg shadow p-6">
+                <div className="text-xs text-amber-500 font-semibold mb-1">PEDAGOGICAL (n=10 cuisines)</div>
                 <PersistenceDiagram />
               </div>
               <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg shadow p-6">
+                <div className="text-xs text-amber-500 font-semibold mb-1">PEDAGOGICAL (n=10 cuisines)</div>
                 <BettiChart />
               </div>
               <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg shadow p-6">

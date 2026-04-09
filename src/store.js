@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 
 const useStore = create((set) => ({
+  // View mode: 'public' (simplified) or 'researcher' (full detail)
+  viewMode: 'public',
+  setViewMode: (mode) => set({ viewMode: mode }),
+
   // Navigation
   activeSection: 0,
   setActiveSection: (idx) => set({ activeSection: idx }),

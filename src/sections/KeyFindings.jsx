@@ -1,13 +1,16 @@
 import React, { useMemo } from 'react'
 import ScrollSection from '../components/ScrollSection'
+import { ShareCardGallery } from '../components/ShareCard'
 import { computeTraditionalVsModern, computeEntropyPerCuisine, computeDendrogram, computeCompoundCuisineMatrix, sortedPairs } from '../data/computed'
 import { CUISINE_NAMES, CUISINE_COLORS } from '../data/constants'
+import useStore from '../store'
 
 /**
  * Key Findings summary — the "so what?" of the entire analysis.
  * Presents the top-level insights in a compelling, scannable format.
  */
 export default function KeyFindings() {
+  const viewMode = useStore(s => s.viewMode)
   const tvm = useMemo(() => computeTraditionalVsModern(), [])
   const entropy = useMemo(() => computeEntropyPerCuisine(), [])
   const compoundData = useMemo(() => computeCompoundCuisineMatrix(), [])
@@ -142,16 +145,27 @@ export default function KeyFindings() {
       </div>
 
       {/* Call to action */}
-      <div className="bg-gradient-to-r from-[#d4a574]/10 to-transparent border border-[#d4a574]/20 rounded-xl p-8 text-center">
+      <div className="bg-gradient-to-r from-[#d4a574]/10 to-transparent border border-[#d4a574]/20 rounded-xl p-8 text-center mb-8">
         <p className="text-lg text-slate-300 mb-2">
-          <strong className="text-[#d4a574]">The bottom line:</strong> Every cuisine has low-GI traditional
+          <strong className="text-[#d4a574]">The practical takeaway:</strong> Every cuisine has low-GI traditional
           options that are molecularly rich and culturally authentic.
         </p>
         <p className="text-sm text-slate-500">
-          You don&apos;t need to abandon your food culture to eat well. You just need to choose
-          the traditional preparations your grandmother would recognize.
+          Dietary guidance that works with cultural food identity — not against it — may improve adherence
+          for populations not well-served by one-size-fits-all recommendations.
+        </p>
+        <p className="text-xs text-slate-600 mt-2 italic">
+          Note: This is an educational data exploration, not clinical evidence. 83% of GI values are estimates.
         </p>
       </div>
+
+      {/* Share Cards — public view */}
+      {viewMode === 'public' && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-400 mb-4">Share these findings</h3>
+          <ShareCardGallery findings={true} />
+        </div>
+      )}
     </ScrollSection>
   )
 }

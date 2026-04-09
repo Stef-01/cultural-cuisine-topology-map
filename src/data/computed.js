@@ -546,6 +546,104 @@ export function computeUniversalCompounds() {
     .sort((a, b) => b.count - a.count)
 }
 
+// ─── COMPOUND-LEVEL PERSISTENCE (n=333) ──────────────────────
+// Proper TDA on the compound point cloud. Each compound is a point
+// in 10-dimensional binary cuisine-space. We compute Hamming distances
+// and run Vietoris-Rips persistence (β₀ only — β₁ is too expensive
+// for n=333 in JS, use Python Ripser for full computation).
+export function computeCompoundPersistence() {
+  // Gather all compounds with their cuisine presence vectors
+  const compoundVectors = new Map()
+  cuisineIds.forEach((cid, cidx) => {
+    const comps = rawData.cuisines[cid].all_compounds || rawData.cuisines[cid].compounds || []
+    comps.forEach(c => {
+      if (!compoundVectors.has(c)) compoundVectors.set(c, new Uint8Array(cuisineIds.length))
+      compoundVectors.get(c)[cidx] = 1
+    })
+  })
+
+  const compounds = [...compoundVectors.keys()]
+  const n = compounds.length
+  const dim = cuisineIds.length
+
+  // Compute Hamming distance between all pairs — but for n=333 that's
+  // 55,000+ pairs. We compute edges sorted by distance for the filtration.
+  // Optimization: only track edges up to distance threshold 0.8 (8/10 bits differ)
+  const edges = []
+  for (let i = 0; i < n; i++) {
+    const vi = compoundVectors.get(compounds[i])
+    for (let j = i + 1; j < n; j++) {
+      const vj = compoundVectors.get(compounds[j])
+      let diff = 0
+      for (let k = 0; k < dim; k++) {
+        if (vi[k] !== vj[k]) diff++
+      }
+      const dist = diff / dim
+      if (dist <= 0.8) {
+        edges.push({ i, j, distance: dist })
+      }
+    }
+  }
+  edges.sort((a, b) => a.distance - b.distance)
+
+  // Run β₀ persistence via Union-Find
+  const uf = unionFind(n)
+  const beta0Features = []
+  let mergeCount = 0
+
+  for (const edge of edges) {
+    if (uf.union(edge.i, edge.j)) {
+      beta0Features.push({
+        birth: 0,
+        death: edge.distance,
+        pair: [compounds[edge.i], compounds[edge.j]],
+      })
+      mergeCount++
+      if (mergeCount >= n - 1) break // all connected
+    }
+  }
+
+  // Remaining component survives to infinity
+  beta0Features.push({ birth: 0, death: Infinity })
+
+  // Compute cluster structure at key thresholds
+  const thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+  const clusterCounts = thresholds.map(t => {
+    const ufT = unionFind(n)
+    for (const edge of edges) {
+      if (edge.distance > t) break
+      ufT.union(edge.i, edge.j)
+    }
+    return { threshold: t, clusters: ufT.components() }
+  })
+
+  // Persistence statistics
+  const finiteBeta0 = beta0Features.filter(f => f.death !== Infinity)
+  const persistences = finiteBeta0.map(f => f.death - f.birth)
+  const avgPersistence = persistences.length
+    ? persistences.reduce((s, v) => s + v, 0) / persistences.length
+    : 0
+  const maxPersistence = persistences.length ? Math.max(...persistences) : 0
+
+  return {
+    n_compounds: n,
+    n_edges: edges.length,
+    beta0Features,
+    clusterCounts,
+    statistics: {
+      avgPersistence,
+      maxPersistence,
+      totalFeatures: beta0Features.length,
+      finiteFeatures: finiteBeta0.length,
+    },
+    metadata: {
+      method: 'Vietoris-Rips β₀ persistence on Hamming distance matrix',
+      dimensions: `${n} compounds in ${dim}-dimensional binary space`,
+      note: 'β₀ only (JS). For full β₁ computation, use Python Ripser.',
+    },
+  }
+}
+
 // ─── COSINE SIMILARITY ───────────────────────────────────────
 // Complementary to Jaccard: treats cuisine compound profiles as
 // binary vectors and computes cosine of the angle between them.

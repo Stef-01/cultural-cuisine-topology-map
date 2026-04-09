@@ -77,6 +77,32 @@ const DumbbellChart = () => {
       .attr('stroke-dasharray', '4')
       .attr('opacity', 0.5)
 
+    // Error bars (± 1 SD) for traditional
+    g.selectAll('line.trad-error')
+      .data(data.filter(d => d.traditional.sdGI > 0))
+      .join('line')
+      .attr('class', 'trad-error')
+      .attr('x1', d => xScale(Math.max(0, d.traditional.avgGI - d.traditional.sdGI)))
+      .attr('x2', d => xScale(Math.min(100, d.traditional.avgGI + d.traditional.sdGI)))
+      .attr('y1', d => yScale(d.cuisine) + yScale.bandwidth() / 2)
+      .attr('y2', d => yScale(d.cuisine) + yScale.bandwidth() / 2)
+      .attr('stroke', '#6a9968')
+      .attr('stroke-width', 1.5)
+      .attr('opacity', 0.3)
+
+    // Error bars (± 1 SD) for modern
+    g.selectAll('line.mod-error')
+      .data(data.filter(d => d.modern.sdGI > 0))
+      .join('line')
+      .attr('class', 'mod-error')
+      .attr('x1', d => xScale(Math.max(0, d.modern.avgGI - d.modern.sdGI)))
+      .attr('x2', d => xScale(Math.min(100, d.modern.avgGI + d.modern.sdGI)))
+      .attr('y1', d => yScale(d.cuisine) + yScale.bandwidth() / 2)
+      .attr('y2', d => yScale(d.cuisine) + yScale.bandwidth() / 2)
+      .attr('stroke', '#c17d5d')
+      .attr('stroke-width', 1.5)
+      .attr('opacity', 0.3)
+
     // Traditional GI dots (green)
     g.selectAll('circle.traditional')
       .data(data)
